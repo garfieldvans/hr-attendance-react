@@ -1,3 +1,5 @@
+/test.md
+
 # Ignore node_modules, build output, and environment files BE
 
 /backend/node_modules
