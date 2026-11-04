@@ -8,3 +8,4 @@ export * from './auth/jwt.config';
 export * from './auth/roles.decorator';
 export * from './auth/roles.guard';
 export * from './database/typeorm.config';
+export * from './storage/upload.config';

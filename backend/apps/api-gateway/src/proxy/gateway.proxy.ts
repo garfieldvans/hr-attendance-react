@@ -14,6 +14,11 @@ const serviceRoutes: ServiceRoute[] = [
     envKey: 'AUTH_SERVICE_URL',
     defaultUrl: 'http://localhost:3001',
   },
+  {
+    prefixes: ['/api/attendances', '/api/files'],
+    envKey: 'CORE_SERVICE_URL',
+    defaultUrl: 'http://localhost:3002',
+  },
 ];
 
 export function createGatewayProxy(config: ConfigService): RequestHandler {
