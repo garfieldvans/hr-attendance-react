@@ -1,0 +1,44 @@
+{
+  "name": "hr-attendance",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:gateway": "node --watch -r ts-node/register apps/api-gateway/src/main.ts",
+    "dev:auth": "node --watch -r ts-node/register apps/auth-service/src/main.ts",
+    "dev:core": "node --watch -r ts-node/register apps/core-service/src/main.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start:gateway": "node dist/apps/api-gateway/src/main.js",
+    "start:auth": "node dist/apps/auth-service/src/main.js",
+    "start:core": "node dist/apps/core-service/src/main.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "migrate:auth": "typeorm-ts-node-commonjs migration:run -d apps/auth-service/src/database/data-source.ts",
+    "migrate:core": "typeorm-ts-node-commonjs migration:run -d apps/core-service/src/database/data-source.ts",
+    "seed": "ts-node apps/auth-service/src/database/seed.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.2.8",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.2.8",
+    "@nestjs/jwt": "^12.0.3",
+    "@nestjs/platform-express": "^11.2.8",
+    "@nestjs/typeorm": "^11.0.3",
+    "bcryptjs": "^3.0.3",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.4",
+    "dotenv": "^17.4.2",
+    "http-proxy-middleware": "^3.0.10",
+    "mysql2": "^3.24.6",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "typeorm": "^0.3.31"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.19.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "ts-node": {
+    "transpileOnly": true
+  }
+}
