@@ -4,7 +4,7 @@ Antarmuka aplikasi absensi: login, absen masuk dengan foto, riwayat absensi, dan
 
 ## Stack
 
-React + Vite, React Router, Axios. Semua request diarahkan ke `api-gateway` di port 3000.
+React 19 + TypeScript, Vite, Tailwind CSS 4, React Router, Axios. Semua request diarahkan ke `api-gateway` di port 3000.
 
 ## Menjalankan
 
@@ -13,14 +13,40 @@ npm install
 npm run dev
 ```
 
-Backend harus sudah berjalan lebih dulu (lihat [../backend/README.md](../backend/README.md)).
+Buka `http://localhost:5173`. Backend harus sudah berjalan lebih dulu (lihat [../backend/README.md](../backend/README.md)).
+
+Akun untuk mencoba:
+
+| Email | Password | Role |
+| --- | --- | --- |
+| hrd@attendance.test | Password123! | HRD |
+| budi@attendance.test | Password123! | Employee |
+
+Tombol **HRD** dan **Karyawan** di halaman login mengisi kredensial di atas otomatis.
+
+## Script
+
+| Script | Kegunaan |
+| --- | --- |
+| `npm run dev` | jalankan dev server |
+| `npm run build` | cek tipe lalu build ke `dist/` |
+| `npm run preview` | jalankan hasil build |
+| `npm run typecheck` | cek tipe tanpa build |
 
 ## Struktur
 
 ```
 src/
-  components/   komponen reusable
-  pages/        halaman
-  services/     pemanggilan API
-  hooks/        state dan logic yang dipakai lintas halaman
+  components/   komponen reusable (Button, Input, Badge, Card, AppLayout)
+  pages/        halaman (login, beranda, data karyawan)
+  services/     pemanggilan API dan penyimpanan sesi
+  hooks/        AuthProvider dan useAuth
+  types.ts      tipe data bersama
 ```
+
+## Alur data
+
+- `services/http.ts` membuat instance Axios dengan `baseURL: '/api'` dan menyisipkan token dari sesi ke header `Authorization`.
+- Selama development, Vite mem-proxy `/api` ke `http://localhost:3000` (lihat `vite.config.ts`), jadi browser tidak perlu konfigurasi CORS.
+- Sesi login disimpan di `localStorage` lewat `services/session.ts`. Respons 401 menghapus sesi dan mengarahkan pengguna kembali ke halaman login.
+- Pesan error dari backend ditampilkan apa adanya, termasuk validasi per field.
