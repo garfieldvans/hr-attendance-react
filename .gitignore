@@ -1,0 +1,15 @@
+# Ignore node_modules, build output, and environment files BE
+
+/backend/node_modules
+/backend/dist
+/backend/.env
+/backend/.env.local
+/backend/uploads
+/backend/*.log
+/backend/.DS_Store
+/backend/coverage
+
+# Ignore frontend build output and environment files FE
+/frontend/node_modules
+/frontend/build
+/frontend/.env
