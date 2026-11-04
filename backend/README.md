@@ -67,6 +67,11 @@ Semua request dari frontend masuk lewat gateway.
 | --- | --- | --- | --- |
 | POST | `/api/auth/login` | publik | mengembalikan `accessToken` dan data user |
 | GET | `/api/auth/profile` | bearer token | profil user yang sedang login |
+| GET | `/api/users` | HRD | daftar karyawan, bisa difilter `q`, `role`, `isActive` |
+| GET | `/api/users/:id` | HRD | detail karyawan |
+| POST | `/api/users` | HRD | tambah karyawan, password minimal 8 karakter |
+| PATCH | `/api/users/:id` | HRD | ubah data karyawan, termasuk password dan status aktif |
+| DELETE | `/api/users/:id` | HRD | hapus karyawan, ditolak bila sudah punya data absensi |
 | GET | `/health` | publik | status gateway |
 
 ## Catatan desain
@@ -74,3 +79,5 @@ Semua request dari frontend masuk lewat gateway.
 - Satu database dipakai bersama karena `attendances` butuh relasi ke `users`. Kepemilikan tabel tetap dipisah: `users` hanya ditulis `auth-service`, `attendances` hanya ditulis `core-service`. Kalau nanti service perlu diskalakan terpisah, relasi bisa diganti pemanggilan API antar service.
 - Migrasi dijalankan per service sesuai tabel yang dimiliki, urutannya `auth` lalu `core` karena ada foreign key.
 - Absensi dibatasi satu kali per hari per karyawan lewat unique index `user_id + attendance_date`.
+- Foreign key absensi memakai `ON DELETE RESTRICT` supaya riwayat absensi tidak ikut terhapus saat karyawan dihapus. Karyawan yang sudah pernah absen sebaiknya dinonaktifkan (`isActive: false`), bukan dihapus.
+- Endpoint karyawan hanya bisa diakses role HRD lewat `RolesGuard`; karyawan biasa mendapat 403.
