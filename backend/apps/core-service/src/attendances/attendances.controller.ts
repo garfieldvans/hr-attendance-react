@@ -28,6 +28,7 @@ export class AttendancesController {
   constructor(private readonly attendancesService: AttendancesService) {}
 
   @Post()
+  @Roles(Role.EMPLOYEE)
   @UseInterceptors(FileInterceptor('photo', attendancePhotoUpload))
   create(
     @CurrentUser() user: JwtPayload,
