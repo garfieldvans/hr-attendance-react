@@ -15,6 +15,19 @@ export interface User {
   isActive: boolean;
 }
 
+export interface EmployeeInput {
+  employeeCode: string;
+  name: string;
+  email: string;
+  role: Role;
+  isActive: boolean;
+  position?: string;
+  department?: string;
+  phone?: string;
+  joinDate?: string;
+  password?: string;
+}
+
 export interface Attendance {
   id: string;
   attendanceDate: string;

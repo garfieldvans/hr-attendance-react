@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { EmployeeDialog } from '../components/EmployeeDialog';
 import { getErrorMessage } from '../services/http';
-import { getUsers } from '../services/user-service';
+import { deleteUser, getUsers } from '../services/user-service';
 import type { User } from '../types';
 
 export const EmployeesPage = () => {
@@ -11,6 +12,11 @@ export const EmployeesPage = () => {
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<User | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadUsers = useCallback(async (search: string) => {
     setLoading(true);
@@ -33,6 +39,44 @@ export const EmployeesPage = () => {
     return () => clearTimeout(timer);
   }, [keyword, loadUsers]);
 
+  const openCreate = () => {
+    setEditing(null);
+    setDialogOpen(true);
+  };
+
+  const openEdit = (user: User) => {
+    setEditing(user);
+    setDialogOpen(true);
+  };
+
+  const handleSaved = (message: string) => {
+    setDialogOpen(false);
+    setEditing(null);
+    setActionError('');
+    setNotice(message);
+    void loadUsers(keyword.trim());
+  };
+
+  const handleDelete = async (user: User) => {
+    if (!window.confirm(`Hapus karyawan ${user.name}? Tindakan ini tidak bisa dibatalkan.`)) {
+      return;
+    }
+
+    setActionError('');
+    setNotice('');
+    setDeletingId(user.id);
+
+    try {
+      await deleteUser(user.id);
+      setNotice(`${user.name} berhasil dihapus.`);
+      await loadUsers(keyword.trim());
+    } catch (deleteError) {
+      setActionError(getErrorMessage(deleteError));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -42,15 +86,28 @@ export const EmployeesPage = () => {
             {loading ? 'Memuat data...' : `${users.length} karyawan ditemukan`}
           </p>
         </div>
-        <input
-          type="search"
-          aria-label="Cari karyawan"
-          placeholder="Cari nama, kode, atau email"
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 sm:w-72"
-        />
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <input
+            type="search"
+            aria-label="Cari karyawan"
+            placeholder="Cari nama, kode, atau email"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 sm:w-72"
+          />
+          <Button size="sm" onClick={openCreate}>
+            Tambah karyawan
+          </Button>
+        </div>
       </div>
+
+      {notice && (
+        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{notice}</p>
+      )}
+
+      {actionError && (
+        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">{actionError}</p>
+      )}
 
       <Card padded={false}>
         {error ? (
@@ -62,7 +119,7 @@ export const EmployeesPage = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[860px] text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-500">
                   <th className="px-5 py-3 font-medium">Kode</th>
@@ -71,13 +128,14 @@ export const EmployeesPage = () => {
                   <th className="px-5 py-3 font-medium">Departemen</th>
                   <th className="px-5 py-3 font-medium">Role</th>
                   <th className="px-5 py-3 font-medium">Status</th>
+                  <th className="px-5 py-3 text-right font-medium">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {loading
                   ? Array.from({ length: 4 }).map((_, index) => (
                       <tr key={index}>
-                        {Array.from({ length: 6 }).map((__, cell) => (
+                        {Array.from({ length: 7 }).map((__, cell) => (
                           <td key={cell} className="px-5 py-4">
                             <div className="h-3 w-24 animate-pulse rounded bg-slate-100" />
                           </td>
@@ -103,6 +161,21 @@ export const EmployeesPage = () => {
                             {user.isActive ? 'Aktif' : 'Nonaktif'}
                           </Badge>
                         </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => openEdit(user)}>
+                              Ubah
+                            </Button>
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              loading={deletingId === user.id}
+                              onClick={() => void handleDelete(user)}
+                            >
+                              Hapus
+                            </Button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
               </tbody>
@@ -116,6 +189,14 @@ export const EmployeesPage = () => {
           </div>
         )}
       </Card>
+
+      {dialogOpen && (
+        <EmployeeDialog
+          employee={editing}
+          onClose={() => setDialogOpen(false)}
+          onSaved={handleSaved}
+        />
+      )}
     </div>
   );
 };

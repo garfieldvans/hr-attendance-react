@@ -37,7 +37,7 @@ Tombol **HRD** dan **Karyawan** di halaman login mengisi kredensial di atas otom
 
 ```
 src/
-  components/   komponen reusable (Button, Input, Badge, Card, AppLayout, PhotoCapture)
+  components/   komponen reusable (Button, Input, Badge, Card, AppLayout, PhotoCapture, EmployeeDialog)
   pages/        halaman (login, beranda, absensi, monitoring, data karyawan)
   services/     pemanggilan API dan penyimpanan sesi
   hooks/        AuthProvider dan useAuth
