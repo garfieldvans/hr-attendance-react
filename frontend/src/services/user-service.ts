@@ -1,4 +1,4 @@
-import type { Role, User } from '../types';
+import type { EmployeeInput, Role, User } from '../types';
 import { http } from './http';
 
 export interface UserFilters {
@@ -10,4 +10,18 @@ export interface UserFilters {
 export const getUsers = async (filters: UserFilters = {}) => {
   const response = await http.get<User[]>('/users', { params: filters });
   return response.data;
+};
+
+export const createUser = async (payload: EmployeeInput) => {
+  const response = await http.post<User>('/users', payload);
+  return response.data;
+};
+
+export const updateUser = async (id: string, payload: Partial<EmployeeInput>) => {
+  const response = await http.patch<User>(`/users/${id}`, payload);
+  return response.data;
+};
+
+export const deleteUser = async (id: string) => {
+  await http.delete(`/users/${id}`);
 };
