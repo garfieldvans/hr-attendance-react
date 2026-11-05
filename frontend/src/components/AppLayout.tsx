@@ -21,13 +21,12 @@ export const AppLayout = () => {
 
   const links = [
     { to: '/', label: 'Beranda', end: true },
-    { to: '/absensi', label: 'Absensi' },
     ...(user?.role === 'HRD'
       ? [
           { to: '/monitoring', label: 'Monitoring' },
           { to: '/karyawan', label: 'Karyawan' },
         ]
-      : []),
+      : [{ to: '/absensi', label: 'Absensi' }]),
   ];
 
   const handleLogout = () => {

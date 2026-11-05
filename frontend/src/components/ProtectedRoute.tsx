@@ -19,9 +19,9 @@ export const ProtectedRoute = ({ roles, children }: ProtectedRouteProps) => {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4 text-center">
         <div>
-          <p className="text-lg font-semibold text-slate-800">Halaman ini khusus HRD</p>
+          <p className="text-lg font-semibold text-slate-800">Halaman tidak tersedia</p>
           <p className="mt-1 text-sm text-slate-500">
-            Akun kamu tidak punya akses ke menu monitoring karyawan.
+            Akun kamu tidak punya akses ke halaman ini.
           </p>
         </div>
       </div>

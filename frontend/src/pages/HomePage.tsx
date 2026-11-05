@@ -35,7 +35,10 @@ export const HomePage = () => {
       <div>
         <h1 className="text-2xl font-semibold text-slate-900">Halo, {user.name}</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Ringkasan data kepegawaian kamu. Kirim bukti kerja harian lewat menu Absensi.
+          Ringkasan data kepegawaian kamu.{' '}
+          {user.role === 'HRD'
+            ? 'Pantau kehadiran tim lewat menu Monitoring.'
+            : 'Kirim bukti kerja harian lewat menu Absensi.'}
         </p>
       </div>
 

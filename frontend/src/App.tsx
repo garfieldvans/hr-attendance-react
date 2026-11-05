@@ -16,7 +16,14 @@ export const App = () => (
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route index element={<HomePage />} />
-            <Route path="absensi" element={<AttendancePage />} />
+            <Route
+              path="absensi"
+              element={
+                <ProtectedRoute roles={['EMPLOYEE']}>
+                  <AttendancePage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="monitoring"
               element={
