@@ -21,7 +21,13 @@ export const AppLayout = () => {
 
   const links = [
     { to: '/', label: 'Beranda', end: true },
-    ...(user?.role === 'HRD' ? [{ to: '/karyawan', label: 'Karyawan' }] : []),
+    { to: '/absensi', label: 'Absensi' },
+    ...(user?.role === 'HRD'
+      ? [
+          { to: '/monitoring', label: 'Monitoring' },
+          { to: '/karyawan', label: 'Karyawan' },
+        ]
+      : []),
   ];
 
   const handleLogout = () => {
@@ -75,7 +81,7 @@ export const AppLayout = () => {
             </Button>
           </div>
         </div>
-        <nav className="flex items-center gap-1 border-t border-slate-100 px-4 py-2 sm:hidden">
+        <nav className="flex items-center gap-1 overflow-x-auto border-t border-slate-100 px-4 py-2 sm:hidden">
           {links.map((link) => (
             <NavLink
               key={link.to}

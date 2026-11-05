@@ -2,9 +2,11 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './components/AppLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './hooks/use-auth';
+import { AttendancePage } from './pages/AttendancePage';
 import { EmployeesPage } from './pages/EmployeesPage';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
+import { MonitoringPage } from './pages/MonitoringPage';
 
 export const App = () => (
   <BrowserRouter>
@@ -14,6 +16,15 @@ export const App = () => (
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route index element={<HomePage />} />
+            <Route path="absensi" element={<AttendancePage />} />
+            <Route
+              path="monitoring"
+              element={
+                <ProtectedRoute roles={['HRD']}>
+                  <MonitoringPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="karyawan"
               element={

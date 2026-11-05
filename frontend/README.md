@@ -37,10 +37,11 @@ Tombol **HRD** dan **Karyawan** di halaman login mengisi kredensial di atas otom
 
 ```
 src/
-  components/   komponen reusable (Button, Input, Badge, Card, AppLayout)
-  pages/        halaman (login, beranda, data karyawan)
+  components/   komponen reusable (Button, Input, Badge, Card, AppLayout, PhotoCapture)
+  pages/        halaman (login, beranda, absensi, monitoring, data karyawan)
   services/     pemanggilan API dan penyimpanan sesi
   hooks/        AuthProvider dan useAuth
+  lib/          helper format tanggal dan jam
   types.ts      tipe data bersama
 ```
 
@@ -50,3 +51,7 @@ src/
 - Selama development, Vite mem-proxy `/api` ke `http://localhost:3000` (lihat `vite.config.ts`), jadi browser tidak perlu konfigurasi CORS.
 - Sesi login disimpan di `localStorage` lewat `services/session.ts`. Respons 401 menghapus sesi dan mengarahkan pengguna kembali ke halaman login.
 - Pesan error dari backend ditampilkan apa adanya, termasuk validasi per field.
+
+## Kamera
+
+Foto absensi diambil lewat `getUserMedia` lalu dikirim sebagai `multipart/form-data`. Browser hanya mengizinkan kamera di origin aman, jadi pakai `localhost` saat development atau HTTPS saat deploy. Jika kamera ditolak atau tidak tersedia, pengguna tetap bisa mengunggah file JPG/PNG/WebP (maksimal 5 MB).
