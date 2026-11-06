@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { FiCheck, FiX } from 'react-icons/fi';
 import { getErrorMessage } from '../services/http';
 import { createUser, updateUser } from '../services/user-service';
 import type { EmployeeInput, User } from '../types';
@@ -111,6 +112,7 @@ export const EmployeeDialog = ({ employee, onClose, onSaved }: EmployeeDialogPro
             </p>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose} aria-label="Tutup formulir">
+            <FiX className="size-4" aria-hidden="true" />
             Tutup
           </Button>
         </header>
@@ -209,6 +211,7 @@ export const EmployeeDialog = ({ employee, onClose, onSaved }: EmployeeDialogPro
               Batal
             </Button>
             <Button size="sm" type="submit" loading={saving}>
+              <FiCheck className="size-4" aria-hidden="true" />
               {employee ? 'Simpan perubahan' : 'Tambah karyawan'}
             </Button>
           </footer>

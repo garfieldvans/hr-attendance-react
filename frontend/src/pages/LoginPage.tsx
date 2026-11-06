@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { FiLogIn, FiShield, FiUser } from 'react-icons/fi';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
@@ -6,8 +7,18 @@ import { useAuth } from '../hooks/use-auth';
 import { getErrorMessage } from '../services/http';
 
 const demoAccounts = [
-  { label: 'HRD', email: 'hrd@attendance.test', password: 'Password123!' },
-  { label: 'Karyawan', email: 'budi@attendance.test', password: 'Password123!' },
+  {
+    label: 'HRD',
+    email: 'hrd@attendance.test',
+    password: 'Password123!',
+    icon: FiShield,
+  },
+  {
+    label: 'Karyawan',
+    email: 'budi@attendance.test',
+    password: 'Password123!',
+    icon: FiUser,
+  },
 ];
 
 export const LoginPage = () => {
@@ -114,6 +125,7 @@ export const LoginPage = () => {
             )}
 
             <Button type="submit" loading={submitting} className="w-full">
+              <FiLogIn className="size-4" aria-hidden="true" />
               Masuk
             </Button>
           </form>
@@ -129,6 +141,7 @@ export const LoginPage = () => {
                   size="sm"
                   onClick={() => useDemoAccount(account)}
                 >
+                  <account.icon className="size-4" aria-hidden="true" />
                   {account.label}
                 </Button>
               ))}

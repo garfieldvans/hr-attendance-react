@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { IconType } from 'react-icons';
 
 type Tone = 'brand' | 'neutral' | 'success' | 'danger';
 
@@ -9,10 +10,19 @@ const tones: Record<Tone, string> = {
   danger: 'bg-rose-50 text-rose-600 ring-rose-100',
 };
 
-export const Badge = ({ tone = 'neutral', children }: { tone?: Tone; children: ReactNode }) => (
+export const Badge = ({
+  tone = 'neutral',
+  icon: Icon,
+  children,
+}: {
+  tone?: Tone;
+  icon?: IconType;
+  children: ReactNode;
+}) => (
   <span
-    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${tones[tone]}`}
+    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${tones[tone]}`}
   >
+    {Icon && <Icon className="size-3 shrink-0" aria-hidden="true" />}
     {children}
   </span>
 );

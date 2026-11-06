@@ -1,6 +1,10 @@
+import { FiActivity, FiCalendar, FiHome, FiLogOut, FiUsers } from 'react-icons/fi';
+import type { IconType } from 'react-icons';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
 import { Button } from './Button';
+
+type NavItem = { to: string; label: string; icon: IconType; end?: boolean };
 
 const roleLabel = {
   HRD: 'HRD',
@@ -19,14 +23,14 @@ export const AppLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const links = [
-    { to: '/', label: 'Beranda', end: true },
+  const links: NavItem[] = [
+    { to: '/', label: 'Beranda', icon: FiHome, end: true },
     ...(user?.role === 'HRD'
       ? [
-          { to: '/monitoring', label: 'Monitoring' },
-          { to: '/karyawan', label: 'Karyawan' },
+          { to: '/monitoring', label: 'Monitoring', icon: FiActivity },
+          { to: '/karyawan', label: 'Karyawan', icon: FiUsers },
         ]
-      : [{ to: '/absensi', label: 'Absensi' }]),
+      : [{ to: '/absensi', label: 'Absensi', icon: FiCalendar }]),
   ];
 
   const handleLogout = () => {
@@ -52,13 +56,14 @@ export const AppLayout = () => {
                   to={link.to}
                   end={link.end}
                   className={({ isActive }) =>
-                    `rounded-lg px-3 py-2 text-sm font-medium transition ${
+                    `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
                       isActive
                         ? 'bg-indigo-50 text-indigo-700'
                         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                     }`
                   }
                 >
+                  <link.icon className="size-4" aria-hidden="true" />
                   {link.label}
                 </NavLink>
               ))}
@@ -76,6 +81,7 @@ export const AppLayout = () => {
               {user ? initials(user.name) : ''}
             </span>
             <Button variant="secondary" size="sm" onClick={handleLogout}>
+              <FiLogOut className="size-4" aria-hidden="true" />
               Keluar
             </Button>
           </div>
@@ -87,11 +93,12 @@ export const AppLayout = () => {
               to={link.to}
               end={link.end}
               className={({ isActive }) =>
-                `rounded-lg px-3 py-1.5 text-sm font-medium ${
+                `flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium ${
                   isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600'
                 }`
               }
             >
+              <link.icon className="size-4" aria-hidden="true" />
               {link.label}
             </NavLink>
           ))}
