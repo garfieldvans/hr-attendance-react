@@ -47,6 +47,18 @@ export interface MonitoredAttendance extends Attendance {
   } | null;
 }
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PagedResult<T> {
+  items: T[];
+  meta: PaginationMeta;
+}
+
 export interface Session {
   accessToken: string;
   user: User;

@@ -3,6 +3,7 @@ import { AppLayout } from './components/AppLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './hooks/use-auth';
 import { AttendancePage } from './pages/AttendancePage';
+import { EmployeeDetailPage } from './pages/EmployeeDetailPage';
 import { EmployeesPage } from './pages/EmployeesPage';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
@@ -37,6 +38,14 @@ export const App = () => (
               element={
                 <ProtectedRoute roles={['HRD']}>
                   <EmployeesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="karyawan/:id"
+              element={
+                <ProtectedRoute roles={['HRD']}>
+                  <EmployeeDetailPage />
                 </ProtectedRoute>
               }
             />

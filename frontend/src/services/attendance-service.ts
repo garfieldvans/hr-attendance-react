@@ -1,4 +1,4 @@
-import type { Attendance, MonitoredAttendance } from '../types';
+import type { Attendance, MonitoredAttendance, PagedResult } from '../types';
 import { http } from './http';
 
 export interface PeriodFilters {
@@ -9,6 +9,8 @@ export interface PeriodFilters {
 export interface MonitoringFilters extends PeriodFilters {
   q?: string;
   userId?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface SubmitAttendancePayload {
@@ -22,7 +24,9 @@ export const getMyAttendances = async (filters: PeriodFilters = {}) => {
 };
 
 export const getAttendances = async (filters: MonitoringFilters = {}) => {
-  const response = await http.get<MonitoredAttendance[]>('/attendances', { params: filters });
+  const response = await http.get<PagedResult<MonitoredAttendance>>('/attendances', {
+    params: filters,
+  });
   return response.data;
 };
 

@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { formatFullDate, formatShortDate, formatTime, todayValue } from '../lib/datetime';
 import { getAttendances } from '../services/attendance-service';
 import { getErrorMessage } from '../services/http';
-import type { MonitoredAttendance } from '../types';
+import type { MonitoredAttendance, PaginationMeta } from '../types';
+
+const pageSize = 10;
 
 const inputClass =
   'w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50';
@@ -15,6 +18,13 @@ export const MonitoringPage = () => {
   const [to, setTo] = useState(todayValue);
   const [keyword, setKeyword] = useState('');
   const [rows, setRows] = useState<MonitoredAttendance[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta>({
+    page: 1,
+    limit: pageSize,
+    total: 0,
+    totalPages: 0,
+  });
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [active, setActive] = useState<MonitoredAttendance | null>(null);
@@ -26,19 +36,21 @@ export const MonitoringPage = () => {
     setError('');
 
     try {
-      setRows(
-        await getAttendances({
-          from: from || undefined,
-          to: to || undefined,
-          q: keyword.trim() || undefined,
-        }),
-      );
+      const result = await getAttendances({
+        from: from || undefined,
+        to: to || undefined,
+        q: keyword.trim() || undefined,
+        page,
+        limit: pageSize,
+      });
+      setRows(result.items);
+      setMeta(result.meta);
     } catch (loadError) {
       setError(getErrorMessage(loadError));
     } finally {
       setLoading(false);
     }
-  }, [from, keyword, to]);
+  }, [from, keyword, page, to]);
 
   useEffect(() => {
     if (rangeInvalid) {
@@ -89,7 +101,10 @@ export const MonitoringPage = () => {
               id="from"
               type="date"
               value={from}
-              onChange={(event) => setFrom(event.target.value)}
+              onChange={(event) => {
+                setFrom(event.target.value);
+                setPage(1);
+              }}
               className={inputClass}
             />
           </div>
@@ -101,7 +116,10 @@ export const MonitoringPage = () => {
               id="to"
               type="date"
               value={to}
-              onChange={(event) => setTo(event.target.value)}
+              onChange={(event) => {
+                setTo(event.target.value);
+                setPage(1);
+              }}
               className={inputClass}
             />
           </div>
@@ -114,7 +132,10 @@ export const MonitoringPage = () => {
               type="search"
               value={keyword}
               placeholder="Nama, kode, atau email"
-              onChange={(event) => setKeyword(event.target.value)}
+              onChange={(event) => {
+                setKeyword(event.target.value);
+                setPage(1);
+              }}
               className={inputClass}
             />
           </div>
@@ -127,8 +148,8 @@ export const MonitoringPage = () => {
           loading
             ? 'Memuat data...'
             : from && to && from === to
-              ? `${formatFullDate(from)} · ${rows.length} absensi`
-              : `${rows.length} absensi ditemukan`
+              ? `${formatFullDate(from)} · ${meta.total} absensi`
+              : `${meta.total} absensi ditemukan`
         }
         padded={false}
       >
@@ -182,7 +203,16 @@ export const MonitoringPage = () => {
                           </button>
                         </td>
                         <td className="px-5 py-3">
-                          <p className="font-medium text-slate-900">{row.employee?.name ?? '-'}</p>
+                          {row.employee ? (
+                            <Link
+                              to={`/karyawan/${row.employee.id}`}
+                              className="font-medium text-slate-900 transition hover:text-indigo-700 hover:underline"
+                            >
+                              {row.employee.name}
+                            </Link>
+                          ) : (
+                            <p className="font-medium text-slate-900">-</p>
+                          )}
                           <p className="text-xs text-slate-500">
                             {[row.employee?.employeeCode, row.employee?.position]
                               .filter(Boolean)
@@ -209,6 +239,36 @@ export const MonitoringPage = () => {
                 Belum ada absensi pada rentang tanggal ini.
               </div>
             )}
+          </div>
+        )}
+
+        {!loading && !errorMessage && meta.total > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3">
+            <p className="text-xs text-slate-500">
+              Menampilkan {(meta.page - 1) * meta.limit + 1}–
+              {(meta.page - 1) * meta.limit + rows.length} dari {meta.total} absensi
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={meta.page <= 1}
+                onClick={() => setPage(meta.page - 1)}
+              >
+                Sebelumnya
+              </Button>
+              <span className="text-xs text-slate-500">
+                Halaman {meta.page} dari {meta.totalPages}
+              </span>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={meta.page >= meta.totalPages}
+                onClick={() => setPage(meta.page + 1)}
+              >
+                Berikutnya
+              </Button>
+            </div>
           </div>
         )}
       </Card>
