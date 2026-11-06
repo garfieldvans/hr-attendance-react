@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { FiChevronLeft, FiChevronRight, FiClock, FiRefreshCw, FiX } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
@@ -158,6 +159,7 @@ export const MonitoringPage = () => {
             <p className="text-sm text-rose-600">{errorMessage}</p>
             {!rangeInvalid && (
               <Button variant="secondary" size="sm" onClick={() => void load()}>
+                <FiRefreshCw className="size-4" aria-hidden="true" />
                 Coba lagi
               </Button>
             )}
@@ -230,7 +232,10 @@ export const MonitoringPage = () => {
                           {row.checkOutAt ? (
                             formatTime(row.checkOutAt)
                           ) : (
-                            <span className="text-slate-400">Belum absen pulang</span>
+                            <span className="inline-flex items-center gap-1 text-slate-400">
+                              <FiClock className="size-3.5" aria-hidden="true" />
+                              Belum absen pulang
+                            </span>
                           )}
                         </td>
                         <td className="px-5 py-3">
@@ -262,21 +267,25 @@ export const MonitoringPage = () => {
               <Button
                 variant="secondary"
                 size="sm"
+                aria-label="Halaman sebelumnya"
                 disabled={meta.page <= 1}
                 onClick={() => setPage(meta.page - 1)}
               >
+                <FiChevronLeft className="size-4" aria-hidden="true" />
                 Sebelumnya
               </Button>
-              <span className="text-xs text-slate-500">
+              <span className="px-1 text-xs text-slate-500">
                 Halaman {meta.page} dari {meta.totalPages}
               </span>
               <Button
                 variant="secondary"
                 size="sm"
+                aria-label="Halaman berikutnya"
                 disabled={meta.page >= meta.totalPages}
                 onClick={() => setPage(meta.page + 1)}
               >
                 Berikutnya
+                <FiChevronRight className="size-4" aria-hidden="true" />
               </Button>
             </div>
           </div>
@@ -315,6 +324,7 @@ export const MonitoringPage = () => {
                 {active.notes && <p className="mt-1 text-xs text-slate-500">{active.notes}</p>}
               </div>
               <Button variant="secondary" size="sm" onClick={() => setActive(null)}>
+                <FiX className="size-4" aria-hidden="true" />
                 Tutup
               </Button>
             </div>

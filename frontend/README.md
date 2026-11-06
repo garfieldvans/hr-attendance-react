@@ -4,7 +4,7 @@ Antarmuka aplikasi absensi: login, absen masuk dengan foto, absen pulang, riwaya
 
 ## Stack
 
-React 19 + TypeScript, Vite, Tailwind CSS 4, React Router, Axios. Semua request diarahkan ke `api-gateway` di port 3000.
+React 19 + TypeScript, Vite, Tailwind CSS 4, React Router, Axios, React Icons. Semua request diarahkan ke `api-gateway` di port 3000.
 
 ## Menjalankan
 

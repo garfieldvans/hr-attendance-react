@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { FiArrowLeft, FiBriefcase, FiCheckCircle, FiSlash } from 'react-icons/fi';
 import { Link, useParams } from 'react-router-dom';
 import { Badge } from '../components/Badge';
 import { Card } from '../components/Card';
@@ -84,7 +85,11 @@ export const EmployeeDetailPage = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Link to="/karyawan" className="text-sm text-slate-500 hover:text-slate-800">
+        <Link
+          to="/karyawan"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition hover:text-slate-800"
+        >
+          <FiArrowLeft className="size-4" aria-hidden="true" />
           Kembali ke data karyawan
         </Link>
         <Card>
@@ -97,7 +102,11 @@ export const EmployeeDetailPage = () => {
   if (error || !employee) {
     return (
       <div className="space-y-6">
-        <Link to="/karyawan" className="text-sm text-slate-500 hover:text-slate-800">
+        <Link
+          to="/karyawan"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition hover:text-slate-800"
+        >
+          <FiArrowLeft className="size-4" aria-hidden="true" />
           Kembali ke data karyawan
         </Link>
         <Card>
@@ -110,7 +119,11 @@ export const EmployeeDetailPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <Link to="/karyawan" className="text-sm text-slate-500 hover:text-slate-800">
+        <Link
+          to="/karyawan"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition hover:text-slate-800"
+        >
+          <FiArrowLeft className="size-4" aria-hidden="true" />
           Kembali ke data karyawan
         </Link>
         <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
@@ -121,10 +134,13 @@ export const EmployeeDetailPage = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge tone="neutral">
+            <Badge tone="neutral" icon={FiBriefcase}>
               {employee.role === 'HRD' ? 'HRD' : 'Karyawan'}
             </Badge>
-            <Badge tone={employee.isActive ? 'success' : 'danger'}>
+            <Badge
+              tone={employee.isActive ? 'success' : 'danger'}
+              icon={employee.isActive ? FiCheckCircle : FiSlash}
+            >
               {employee.isActive ? 'Aktif' : 'Nonaktif'}
             </Badge>
           </div>

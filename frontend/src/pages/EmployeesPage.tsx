@@ -1,4 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
+import {
+  FiCheckCircle,
+  FiChevronLeft,
+  FiChevronRight,
+  FiEdit2,
+  FiPlus,
+  FiRefreshCw,
+  FiSlash,
+  FiTrash2,
+} from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
@@ -157,6 +167,7 @@ export const EmployeesPage = () => {
             ))}
           </select>
           <Button size="sm" onClick={openCreate}>
+            <FiPlus className="size-4" aria-hidden="true" />
             Tambah karyawan
           </Button>
         </div>
@@ -179,6 +190,7 @@ export const EmployeesPage = () => {
               size="sm"
               onClick={() => void loadUsers(keyword.trim(), page, status)}
             >
+              <FiRefreshCw className="size-4" aria-hidden="true" />
               Coba lagi
             </Button>
           </div>
@@ -227,13 +239,17 @@ export const EmployeesPage = () => {
                           </Badge>
                         </td>
                         <td className="px-5 py-4">
-                          <Badge tone={user.isActive ? 'success' : 'danger'}>
+                          <Badge
+                            tone={user.isActive ? 'success' : 'danger'}
+                            icon={user.isActive ? FiCheckCircle : FiSlash}
+                          >
                             {user.isActive ? 'Aktif' : 'Nonaktif'}
                           </Badge>
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center justify-end gap-2">
                             <Button variant="ghost" size="sm" onClick={() => openEdit(user)}>
+                              <FiEdit2 className="size-4" aria-hidden="true" />
                               Ubah
                             </Button>
                             <Button
@@ -242,6 +258,7 @@ export const EmployeesPage = () => {
                               loading={deletingId === user.id}
                               onClick={() => void handleDelete(user)}
                             >
+                              <FiTrash2 className="size-4" aria-hidden="true" />
                               Hapus
                             </Button>
                           </div>
@@ -269,21 +286,25 @@ export const EmployeesPage = () => {
               <Button
                 variant="secondary"
                 size="sm"
+                aria-label="Halaman sebelumnya"
                 disabled={meta.page <= 1}
                 onClick={() => setPage(meta.page - 1)}
               >
+                <FiChevronLeft className="size-4" aria-hidden="true" />
                 Sebelumnya
               </Button>
-              <span className="text-xs text-slate-500">
+              <span className="px-1 text-xs text-slate-500">
                 Halaman {meta.page} dari {meta.totalPages}
               </span>
               <Button
                 variant="secondary"
                 size="sm"
+                aria-label="Halaman berikutnya"
                 disabled={meta.page >= meta.totalPages}
                 onClick={() => setPage(meta.page + 1)}
               >
                 Berikutnya
+                <FiChevronRight className="size-4" aria-hidden="true" />
               </Button>
             </div>
           </div>

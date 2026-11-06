@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { FiCheck, FiCheckCircle, FiClock, FiLogOut, FiRefreshCw, FiSend } from 'react-icons/fi';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -108,11 +109,17 @@ export const AttendancePage = () => {
               <div className="flex-1 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge tone="brand">{todayAttendance.workType}</Badge>
-                  <Badge tone="success">Tercatat</Badge>
+                  <Badge tone="success" icon={FiCheckCircle}>
+                    Tercatat
+                  </Badge>
                   {todayAttendance.checkOutAt ? (
-                    <Badge tone="neutral">Selesai</Badge>
+                    <Badge tone="neutral" icon={FiCheck}>
+                      Selesai
+                    </Badge>
                   ) : (
-                    <Badge tone="neutral">Belum absen pulang</Badge>
+                    <Badge tone="neutral" icon={FiClock}>
+                      Belum absen pulang
+                    </Badge>
                   )}
                 </div>
                 <p className="text-sm text-slate-600">
@@ -146,6 +153,7 @@ export const AttendancePage = () => {
                       loading={checkingOut}
                       onClick={() => void handleCheckOut()}
                     >
+                      <FiLogOut className="size-4" aria-hidden="true" />
                       Absen pulang
                     </Button>
                   </div>
@@ -189,6 +197,7 @@ export const AttendancePage = () => {
               )}
 
               <Button className="w-full" loading={submitting} onClick={() => void handleSubmit()}>
+                <FiSend className="size-4" aria-hidden="true" />
                 Kirim absensi
               </Button>
             </div>
@@ -210,6 +219,7 @@ export const AttendancePage = () => {
             <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
               <p className="text-sm text-rose-600">{loadError}</p>
               <Button variant="secondary" size="sm" onClick={() => void loadHistory()}>
+                <FiRefreshCw className="size-4" aria-hidden="true" />
                 Coba lagi
               </Button>
             </div>

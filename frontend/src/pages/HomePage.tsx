@@ -1,3 +1,4 @@
+import { FiBriefcase, FiCheckCircle, FiSlash } from 'react-icons/fi';
 import { Badge } from '../components/Badge';
 import { Card } from '../components/Card';
 import { useAuth } from '../hooks/use-auth';
@@ -55,10 +56,13 @@ export const HomePage = () => {
           <div>
             <p className="font-medium text-slate-900">{user.name}</p>
             <div className="mt-1 flex items-center gap-2">
-              <Badge tone={user.role === 'HRD' ? 'brand' : 'neutral'}>
+              <Badge tone={user.role === 'HRD' ? 'brand' : 'neutral'} icon={FiBriefcase}>
                 {user.role === 'HRD' ? 'HRD' : 'Karyawan'}
               </Badge>
-              <Badge tone={user.isActive ? 'success' : 'danger'}>
+              <Badge
+                tone={user.isActive ? 'success' : 'danger'}
+                icon={user.isActive ? FiCheckCircle : FiSlash}
+              >
                 {user.isActive ? 'Aktif' : 'Nonaktif'}
               </Badge>
             </div>

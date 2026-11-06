@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { FiCamera, FiRefreshCw, FiUpload, FiVideo, FiVideoOff } from 'react-icons/fi';
 import { Button } from './Button';
 
 interface PhotoCaptureProps {
@@ -154,14 +155,7 @@ export const PhotoCapture = ({ file, onChange }: PhotoCaptureProps) => {
             {!cameraActive && (
               <div className="flex h-56 flex-col items-center justify-center gap-2 px-6 text-center">
                 <span className="flex size-11 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm">
-                  <svg viewBox="0 0 24 24" fill="none" className="size-5" aria-hidden="true">
-                    <path
-                      d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2a1 1 0 0 0 .83-.45l.74-1.1A1 1 0 0 1 10.1 4h3.8a1 1 0 0 1 .83.45l.74 1.1a1 1 0 0 0 .83.45h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8Z"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                    />
-                    <circle cx="12" cy="12.5" r="3.25" stroke="currentColor" strokeWidth="1.5" />
-                  </svg>
+                  <FiCamera className="size-5" aria-hidden="true" />
                 </span>
                 <p className="text-sm font-medium text-slate-600">Ambil foto bukti kerja</p>
                 <p className="text-xs text-slate-400">
@@ -175,6 +169,7 @@ export const PhotoCapture = ({ file, onChange }: PhotoCaptureProps) => {
         {cameraActive && (
           <div className="absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-slate-900/70 to-transparent p-3">
             <Button size="sm" onClick={takePicture}>
+              <FiCamera className="size-4" aria-hidden="true" />
               Ambil foto
             </Button>
           </div>
@@ -186,20 +181,24 @@ export const PhotoCapture = ({ file, onChange }: PhotoCaptureProps) => {
       <div className="flex flex-wrap items-center gap-2">
         {preview ? (
           <Button variant="secondary" size="sm" onClick={reset}>
+            <FiRefreshCw className="size-4" aria-hidden="true" />
             Ganti foto
           </Button>
         ) : cameraActive ? (
           <Button variant="secondary" size="sm" onClick={stopCamera}>
+            <FiVideoOff className="size-4" aria-hidden="true" />
             Matikan kamera
           </Button>
         ) : (
           <Button variant="secondary" size="sm" onClick={() => void startCamera()}>
+            <FiVideo className="size-4" aria-hidden="true" />
             Nyalakan kamera
           </Button>
         )}
 
         {!preview && (
-          <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+            <FiUpload className="size-4" aria-hidden="true" />
             Pilih file
             <input
               type="file"
