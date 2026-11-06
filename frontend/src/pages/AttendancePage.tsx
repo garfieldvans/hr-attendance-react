@@ -218,9 +218,15 @@ export const AttendancePage = () => {
           {loadError ? (
             <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
               <p className="text-sm text-rose-600">{loadError}</p>
-              <Button variant="secondary" size="sm" onClick={() => void loadHistory()}>
+              <Button
+                variant="secondary"
+                size="sm"
+                iconOnly
+                onClick={() => void loadHistory()}
+                aria-label="Coba lagi"
+                title="Coba lagi"
+              >
                 <FiRefreshCw className="size-4" aria-hidden="true" />
-                Coba lagi
               </Button>
             </div>
           ) : loading ? (

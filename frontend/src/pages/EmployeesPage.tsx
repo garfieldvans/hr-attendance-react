@@ -188,10 +188,12 @@ export const EmployeesPage = () => {
             <Button
               variant="secondary"
               size="sm"
+              iconOnly
               onClick={() => void loadUsers(keyword.trim(), page, status)}
+              aria-label="Coba lagi"
+              title="Coba lagi"
             >
               <FiRefreshCw className="size-4" aria-hidden="true" />
-              Coba lagi
             </Button>
           </div>
         ) : (
@@ -248,18 +250,26 @@ export const EmployeesPage = () => {
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => openEdit(user)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              iconOnly
+                              onClick={() => openEdit(user)}
+                              aria-label={`Ubah data ${user.name}`}
+                              title="Ubah"
+                            >
                               <FiEdit2 className="size-4" aria-hidden="true" />
-                              Ubah
                             </Button>
                             <Button
                               variant="danger"
                               size="sm"
+                              iconOnly
                               loading={deletingId === user.id}
                               onClick={() => void handleDelete(user)}
+                              aria-label={`Hapus ${user.name}`}
+                              title="Hapus"
                             >
                               <FiTrash2 className="size-4" aria-hidden="true" />
-                              Hapus
                             </Button>
                           </div>
                         </td>
@@ -286,12 +296,13 @@ export const EmployeesPage = () => {
               <Button
                 variant="secondary"
                 size="sm"
+                iconOnly
                 aria-label="Halaman sebelumnya"
+                title="Halaman sebelumnya"
                 disabled={meta.page <= 1}
                 onClick={() => setPage(meta.page - 1)}
               >
                 <FiChevronLeft className="size-4" aria-hidden="true" />
-                Sebelumnya
               </Button>
               <span className="px-1 text-xs text-slate-500">
                 Halaman {meta.page} dari {meta.totalPages}
@@ -299,11 +310,12 @@ export const EmployeesPage = () => {
               <Button
                 variant="secondary"
                 size="sm"
+                iconOnly
                 aria-label="Halaman berikutnya"
+                title="Halaman berikutnya"
                 disabled={meta.page >= meta.totalPages}
                 onClick={() => setPage(meta.page + 1)}
               >
-                Berikutnya
                 <FiChevronRight className="size-4" aria-hidden="true" />
               </Button>
             </div>

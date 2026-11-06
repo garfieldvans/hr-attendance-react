@@ -180,30 +180,51 @@ export const PhotoCapture = ({ file, onChange }: PhotoCaptureProps) => {
 
       <div className="flex flex-wrap items-center gap-2">
         {preview ? (
-          <Button variant="secondary" size="sm" onClick={reset}>
+          <Button
+            variant="secondary"
+            size="sm"
+            iconOnly
+            onClick={reset}
+            aria-label="Ganti foto"
+            title="Ganti foto"
+          >
             <FiRefreshCw className="size-4" aria-hidden="true" />
-            Ganti foto
           </Button>
         ) : cameraActive ? (
-          <Button variant="secondary" size="sm" onClick={stopCamera}>
+          <Button
+            variant="secondary"
+            size="sm"
+            iconOnly
+            onClick={stopCamera}
+            aria-label="Matikan kamera"
+            title="Matikan kamera"
+          >
             <FiVideoOff className="size-4" aria-hidden="true" />
-            Matikan kamera
           </Button>
         ) : (
-          <Button variant="secondary" size="sm" onClick={() => void startCamera()}>
+          <Button
+            variant="secondary"
+            size="sm"
+            iconOnly
+            onClick={() => void startCamera()}
+            aria-label="Nyalakan kamera"
+            title="Nyalakan kamera"
+          >
             <FiVideo className="size-4" aria-hidden="true" />
-            Nyalakan kamera
           </Button>
         )}
 
         {!preview && (
-          <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <label
+            className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus-within:ring-4 focus-within:ring-slate-200"
+            title="Pilih file foto"
+          >
             <FiUpload className="size-4" aria-hidden="true" />
-            Pilih file
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              className="hidden"
+              aria-label="Pilih file foto"
+              className="sr-only"
               onChange={pickFile}
             />
           </label>

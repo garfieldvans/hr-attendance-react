@@ -7,6 +7,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   size?: Size;
   loading?: boolean;
+  iconOnly?: boolean;
 }
 
 const variants: Record<Variant, string> = {
@@ -22,17 +23,23 @@ const sizes: Record<Size, string> = {
   md: 'px-4 py-2.5 text-sm',
 };
 
+const iconSizes: Record<Size, string> = {
+  sm: 'size-8',
+  md: 'size-10',
+};
+
 export const Button = ({
   variant = 'primary',
   size = 'md',
   loading = false,
+  iconOnly = false,
   className = '',
   children,
   disabled,
   ...props
 }: ButtonProps) => (
   <button
-    className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition focus:outline-none focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${sizes[size]} ${className}`}
+    className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition focus:outline-none focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${iconOnly ? `${iconSizes[size]} p-0` : sizes[size]} ${className}`}
     disabled={disabled || loading}
     {...props}
   >

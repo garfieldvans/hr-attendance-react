@@ -158,9 +158,15 @@ export const MonitoringPage = () => {
           <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
             <p className="text-sm text-rose-600">{errorMessage}</p>
             {!rangeInvalid && (
-              <Button variant="secondary" size="sm" onClick={() => void load()}>
+              <Button
+                variant="secondary"
+                size="sm"
+                iconOnly
+                onClick={() => void load()}
+                aria-label="Coba lagi"
+                title="Coba lagi"
+              >
                 <FiRefreshCw className="size-4" aria-hidden="true" />
-                Coba lagi
               </Button>
             )}
           </div>
@@ -267,12 +273,13 @@ export const MonitoringPage = () => {
               <Button
                 variant="secondary"
                 size="sm"
+                iconOnly
                 aria-label="Halaman sebelumnya"
+                title="Halaman sebelumnya"
                 disabled={meta.page <= 1}
                 onClick={() => setPage(meta.page - 1)}
               >
                 <FiChevronLeft className="size-4" aria-hidden="true" />
-                Sebelumnya
               </Button>
               <span className="px-1 text-xs text-slate-500">
                 Halaman {meta.page} dari {meta.totalPages}
@@ -280,11 +287,12 @@ export const MonitoringPage = () => {
               <Button
                 variant="secondary"
                 size="sm"
+                iconOnly
                 aria-label="Halaman berikutnya"
+                title="Halaman berikutnya"
                 disabled={meta.page >= meta.totalPages}
                 onClick={() => setPage(meta.page + 1)}
               >
-                Berikutnya
                 <FiChevronRight className="size-4" aria-hidden="true" />
               </Button>
             </div>
@@ -323,9 +331,15 @@ export const MonitoringPage = () => {
                 </p>
                 {active.notes && <p className="mt-1 text-xs text-slate-500">{active.notes}</p>}
               </div>
-              <Button variant="secondary" size="sm" onClick={() => setActive(null)}>
+              <Button
+                variant="secondary"
+                size="sm"
+                iconOnly
+                onClick={() => setActive(null)}
+                aria-label="Tutup"
+                title="Tutup"
+              >
                 <FiX className="size-4" aria-hidden="true" />
-                Tutup
               </Button>
             </div>
           </div>
