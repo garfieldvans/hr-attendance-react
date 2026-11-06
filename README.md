@@ -2,6 +2,27 @@
 
 Aplikasi absensi WFH dan monitoring karyawan. Backend dan frontend berada di satu repository tetapi berdiri sebagai dua project terpisah, masing-masing punya dependency dan cara jalan sendiri.
 
+## Fitur
+
+**Karyawan**
+
+- Login, lalu absen WFH sekali sehari dengan foto bukti kerja dan catatan opsional.
+- Melihat riwayat absensi sendiri beserta status hari ini.
+
+**HRD**
+
+- Monitoring absensi seluruh karyawan: filter rentang tanggal dan pencarian nama, kode, atau email, plus pratinjau foto.
+- Mengelola data karyawan: tambah, ubah, hapus, cari, dan filter status aktif.
+- Data absensi bersifat baca saja, tidak ada aksi ubah atau hapus.
+
+## Aturan absensi
+
+- Hanya role karyawan yang bisa mengirim absensi; HRD mendapat 403 dan menu Absensi tidak muncul untuk HRD.
+- Satu absensi per hari, tanpa check-out. Tanggal dan jam diambil dari server memakai zona `APP_TIMEZONE` (default `Asia/Jakarta`).
+- Tipe kerja selalu WFH.
+- Foto wajib diunggah (JPG/PNG/WebP, maksimal 5 MB), bisa lewat kamera atau pilih file.
+- Tidak ada registrasi mandiri. Akun karyawan dibuat HRD, dan akun HRD tidak ikut tampil di daftar karyawan.
+
 ## Struktur
 
 ```
@@ -22,33 +43,56 @@ React  ->  api-gateway :3000  ->  auth-service :3001   (users, login, profil)
 - Setiap service tetap memvalidasi JWT sendiri, jadi service tidak bergantung pada gateway untuk urusan otorisasi.
 - Database MySQL dipakai bersama karena absensi butuh relasi ke data karyawan, sementara penulisan tiap tabel tetap hanya dilakukan oleh service pemiliknya.
 
+## Prasyarat
+
+- Node.js 20 atau lebih baru.
+- Docker, hanya untuk MySQL. Backend dan frontend dijalankan langsung dengan Node.
+
 ## Menjalankan
+
+Database:
 
 ```bash
 cd backend
-docker compose up -d
+docker compose up -d        # MySQL 8.4 di localhost:3306, database attendance_db
+```
+
+Backend, dari folder `backend`:
+
+```bash
 cp .env.example .env
 npm install
 npm run migrate:auth && npm run migrate:core
 npm run seed
-npm run dev:auth      # terminal 1
-npm run dev:core      # terminal 2
-npm run dev:gateway   # terminal 3
+npm run dev:auth      # terminal 1, port 3001
+npm run dev:core      # terminal 2, port 3002
+npm run dev:gateway   # terminal 3, port 3000
 ```
 
-Lalu jalankan frontend dari terminal lain:
+Frontend, dari folder `frontend`:
 
 ```bash
-cd frontend
 npm install
-npm run dev
+npm run dev           # http://localhost:5173
 ```
 
-Akun untuk mencoba:
+Cek kesiapan backend dengan `curl http://localhost:3000/health` (port 3001 dan 3002 juga punya `/health`).
 
-| Email | Password | Role |
-| --- | --- | --- |
-| hrd@attendance.test | Password123! | HRD |
-| budi@attendance.test | Password123! | Employee |
-| sari@attendance.test | Password123! | Employee |
-| agus@attendance.test | Password123! | Employee |
+## Akun demo
+
+Hasil `npm run seed`, semuanya memakai password `Password123!`:
+
+| Email | Role |
+| --- | --- |
+| hrd@attendance.test | HRD |
+| budi@attendance.test | Karyawan |
+| sari@attendance.test | Karyawan |
+| agus@attendance.test | Karyawan |
+
+Tombol **HRD** dan **Karyawan** di halaman login mengisi kredensial di atas otomatis.
+
+## Catatan
+
+- Foto absensi tersimpan di `backend/uploads/attendances/<tanggal>/` dan disajikan lewat gateway di `/api/files/...`. Foto tidak ikut masuk git.
+- Data MySQL disimpan di volume Docker `hr-attendance_mysql-data`, jadi `docker compose down` tidak menghapus data. Gunakan `docker compose down -v` kalau ingin mulai dari database kosong, lalu jalankan migrasi dan seed lagi.
+- Karyawan yang sudah punya riwayat absensi tidak bisa dihapus (foreign key `RESTRICT`); nonaktifkan lewat status aktif agar tidak bisa login.
