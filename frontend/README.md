@@ -52,6 +52,7 @@ src/
 - Sesi login disimpan di `localStorage` lewat `services/session.ts`. Respons 401 menghapus sesi dan mengarahkan pengguna kembali ke halaman login.
 - Pesan error dari backend ditampilkan apa adanya, termasuk validasi per field.
 - Monitoring dan data karyawan memuat 10 baris per halaman lewat parameter `page` dan `limit`; posisi halaman ikut direset saat filter atau kata kunci berubah, dan kembali ke halaman sebelumnya bila baris terakhir pada halaman itu dihapus.
+- Data karyawan bisa disaring berdasarkan kata kunci (nama, kode, email) dan status aktif, lalu digabung dengan pagination; jumlah baris di footer mengikuti hasil filter.
 - Halaman detail karyawan (`/karyawan/:id`) mengambil profil dari `GET /api/users/:id` dan 5 absensi terbaru dari `GET /api/attendances?userId=...`. Nama karyawan di tabel monitoring dan data karyawan menjadi tautan ke halaman ini.
 
 ## Kamera
