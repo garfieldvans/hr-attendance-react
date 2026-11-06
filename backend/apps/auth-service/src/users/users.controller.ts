@@ -26,8 +26,9 @@ export class UsersController {
 
   @Get()
   async findAll(@Query() query: QueryUsersDto) {
-    const users = await this.usersService.findAll(query);
-    return users.map(toPublicUser);
+    const { items, meta } = await this.usersService.findAll(query);
+
+    return { items: items.map(toPublicUser), meta };
   }
 
   @Get(':id')

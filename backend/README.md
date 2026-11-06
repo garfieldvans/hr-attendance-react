@@ -66,7 +66,7 @@ Semua request dari frontend masuk lewat gateway.
 | --- | --- | --- | --- |
 | POST | `/api/auth/login` | publik | mengembalikan `accessToken` dan data user |
 | GET | `/api/auth/profile` | bearer token | profil user yang sedang login |
-| GET | `/api/users` | HRD | daftar karyawan, bisa difilter `q`, `role`, `isActive` |
+| GET | `/api/users` | HRD | daftar karyawan, bisa difilter `q`, `role`, `isActive`, dengan pagination `page` dan `limit` |
 | GET | `/api/users/:id` | HRD | detail karyawan |
 | POST | `/api/users` | HRD | tambah karyawan, password minimal 8 karakter |
 | PATCH | `/api/users/:id` | HRD | ubah data karyawan, termasuk password dan status aktif |
@@ -88,4 +88,5 @@ Semua request dari frontend masuk lewat gateway.
 - Akun HRD tetap tersimpan di tabel `users`, tetapi tidak ikut ditampilkan pada pengelolaan data karyawan di frontend (`GET /api/users` dengan filter `role`).
 - Absensi menyimpan tanggal dan jam dari server. Tanggal kehadiran dihitung dengan zona `APP_TIMEZONE` (default `Asia/Jakarta`), jadi absen jam 00.30 WIB tercatat pada hari yang benar.
 - Foto disimpan di `UPLOAD_DIR` (default `uploads/attendances/<tanggal>/`) dan disajikan `core-service` lewat `/files`, lalu diteruskan gateway sebagai `/api/files/...`. Nama file memakai UUID supaya tidak bisa ditebak.
-- Endpoint monitoring mengembalikan `{ items, meta }` dengan `page` (default 1) dan `limit` (default 10, maksimal 50), jadi `total` dan `totalPages` sudah dihitung server. Filter `q` menyaring berdasarkan nama atau kode karyawan.
+- Endpoint daftar karyawan dan monitoring mengembalikan `{ items, meta }` dengan `page` (default 1) dan `limit` (default 10, maksimal 50), jadi `total` dan `totalPages` sudah dihitung server. Filter `q` pada monitoring menyaring berdasarkan nama atau kode karyawan.
+- Operasi baca (login, profil, daftar karyawan, absensi, monitoring) memakai query SQL langsung lewat `DataSource.query`; penulisan data tetap lewat repository TypeORM agar validasi dan relasi aman.

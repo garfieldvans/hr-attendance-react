@@ -9,6 +9,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './user.entity';
 
 const passwordSaltRounds = 10;
+const defaultPageSize = 10;
 
 interface UserRow {
   id: string;
@@ -79,6 +80,8 @@ export class UsersService {
   }
 
   async findAll(filters: QueryUsersDto) {
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? defaultPageSize;
     const conditions: string[] = [];
     const params: (string | number)[] = [];
 
@@ -100,11 +103,27 @@ export class UsersService {
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const rows = await this.dataSource.query<UserRow[]>(
-      `SELECT ${userFields} FROM users ${where} ORDER BY employee_code ASC`,
-      params,
+      `SELECT ${userFields} FROM users ${where}
+       ORDER BY employee_code ASC
+       LIMIT ? OFFSET ?`,
+      [...params, limit, (page - 1) * limit],
     );
 
-    return rows.map(toUser);
+    const totals = await this.dataSource.query<{ total: number | string }[]>(
+      `SELECT COUNT(*) AS total FROM users ${where}`,
+      params,
+    );
+    const total = Number(totals[0]?.total ?? 0);
+
+    return {
+      items: rows.map(toUser),
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findDetail(id: string) {
