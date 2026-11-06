@@ -10,6 +10,14 @@ import type { PaginationMeta, User } from '../types';
 
 const pageSize = 10;
 
+type StatusFilter = 'all' | 'active' | 'inactive';
+
+const statusOptions: { value: StatusFilter; label: string }[] = [
+  { value: 'all', label: 'Semua status' },
+  { value: 'active', label: 'Aktif' },
+  { value: 'inactive', label: 'Nonaktif' },
+];
+
 export const EmployeesPage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [meta, setMeta] = useState<PaginationMeta>({
@@ -20,6 +28,7 @@ export const EmployeesPage = () => {
   });
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState('');
+  const [status, setStatus] = useState<StatusFilter>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -28,33 +37,37 @@ export const EmployeesPage = () => {
   const [editing, setEditing] = useState<User | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const loadUsers = useCallback(async (search: string, targetPage: number) => {
-    setLoading(true);
-    setError('');
+  const loadUsers = useCallback(
+    async (search: string, targetPage: number, statusFilter: StatusFilter) => {
+      setLoading(true);
+      setError('');
 
-    try {
-      const result = await getUsers({
-        role: 'EMPLOYEE',
-        page: targetPage,
-        limit: pageSize,
-        ...(search ? { q: search } : {}),
-      });
-      setUsers(result.items);
-      setMeta(result.meta);
-    } catch (loadError) {
-      setError(getErrorMessage(loadError));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      try {
+        const result = await getUsers({
+          role: 'EMPLOYEE',
+          page: targetPage,
+          limit: pageSize,
+          ...(search ? { q: search } : {}),
+          ...(statusFilter === 'all' ? {} : { isActive: statusFilter === 'active' }),
+        });
+        setUsers(result.items);
+        setMeta(result.meta);
+      } catch (loadError) {
+        setError(getErrorMessage(loadError));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      void loadUsers(keyword.trim(), page);
+      void loadUsers(keyword.trim(), page, status);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [keyword, page, loadUsers]);
+  }, [keyword, page, status, loadUsers]);
 
   const openCreate = () => {
     setEditing(null);
@@ -79,7 +92,7 @@ export const EmployeesPage = () => {
       return;
     }
 
-    void loadUsers(keyword.trim(), page);
+    void loadUsers(keyword.trim(), page, status);
   };
 
   const handleDelete = async (user: User) => {
@@ -98,7 +111,7 @@ export const EmployeesPage = () => {
       if (users.length === 1 && page > 1) {
         setPage(page - 1);
       } else {
-        await loadUsers(keyword.trim(), page);
+        await loadUsers(keyword.trim(), page, status);
       }
     } catch (deleteError) {
       setActionError(getErrorMessage(deleteError));
@@ -128,6 +141,21 @@ export const EmployeesPage = () => {
             }}
             className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 sm:w-72"
           />
+          <select
+            aria-label="Filter status karyawan"
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value as StatusFilter);
+              setPage(1);
+            }}
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 sm:w-40"
+          >
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           <Button size="sm" onClick={openCreate}>
             Tambah karyawan
           </Button>
@@ -149,7 +177,7 @@ export const EmployeesPage = () => {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => void loadUsers(keyword.trim(), page)}
+              onClick={() => void loadUsers(keyword.trim(), page, status)}
             >
               Coba lagi
             </Button>
@@ -225,7 +253,7 @@ export const EmployeesPage = () => {
 
             {!loading && users.length === 0 && (
               <div className="px-6 py-16 text-center text-sm text-slate-500">
-                Tidak ada karyawan yang cocok dengan pencarian.
+                Tidak ada karyawan yang cocok dengan pencarian atau filter status.
               </div>
             )}
           </div>
