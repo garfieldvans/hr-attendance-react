@@ -111,9 +111,15 @@ export const EmployeeDialog = ({ employee, onClose, onSaved }: EmployeeDialogPro
                 : 'Akun baru bisa langsung dipakai untuk login.'}
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Tutup formulir">
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            onClick={onClose}
+            aria-label="Tutup formulir"
+            title="Tutup"
+          >
             <FiX className="size-4" aria-hidden="true" />
-            Tutup
           </Button>
         </header>
 

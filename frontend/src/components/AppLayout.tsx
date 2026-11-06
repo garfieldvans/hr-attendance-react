@@ -80,9 +80,15 @@ export const AppLayout = () => {
             <span className="flex size-9 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
               {user ? initials(user.name) : ''}
             </span>
-            <Button variant="secondary" size="sm" onClick={handleLogout}>
+            <Button
+              variant="secondary"
+              size="sm"
+              iconOnly
+              onClick={handleLogout}
+              aria-label="Keluar"
+              title="Keluar"
+            >
               <FiLogOut className="size-4" aria-hidden="true" />
-              Keluar
             </Button>
           </div>
         </div>
