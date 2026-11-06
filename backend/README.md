@@ -72,9 +72,9 @@ Semua request dari frontend masuk lewat gateway.
 | POST | `/api/users` | HRD | tambah karyawan, password minimal 8 karakter |
 | PATCH | `/api/users/:id` | HRD | ubah data karyawan, termasuk password dan status aktif |
 | DELETE | `/api/users/:id` | HRD | hapus karyawan, ditolak bila sudah punya data absensi |
-| POST | `/api/attendances` | karyawan | kirim absensi, `multipart/form-data` dengan `photo` (JPG/PNG/WebP, maks 5 MB), `workType` (`WFH`/`WFO`), dan `notes` opsional |
+| POST | `/api/attendances` | karyawan | kirim absensi, `multipart/form-data` dengan `photo` (JPG/PNG/WebP, maks 5 MB) dan `notes` opsional; `workType` selalu `WFH` |
 | GET | `/api/attendances/me` | bearer token | riwayat absensi sendiri, bisa difilter `from` dan `to` (`YYYY-MM-DD`) |
-| GET | `/api/attendances` | HRD | monitoring absensi hari ini, difilter `from`, `to`, `q`, `workType`, `userId` |
+| GET | `/api/attendances` | HRD | monitoring absensi hari ini, difilter `from`, `to`, `q`, `userId` |
 | GET | `/api/files/...` | publik | file foto absensi |
 | GET | `/health` | publik | status gateway |
 
@@ -85,6 +85,7 @@ Semua request dari frontend masuk lewat gateway.
 - Absensi dibatasi satu kali per hari per karyawan lewat unique index `user_id + attendance_date`.
 - Foreign key absensi memakai `ON DELETE RESTRICT` supaya riwayat absensi tidak ikut terhapus saat karyawan dihapus. Karyawan yang sudah pernah absen sebaiknya dinonaktifkan (`isActive: false`), bukan dihapus.
 - Endpoint karyawan hanya bisa diakses role HRD lewat `RolesGuard`; karyawan biasa mendapat 403.
-- Absensi hanya bisa dikirim role karyawan. HRD bersifat baca saja: hanya punya akses monitoring, tanpa endpoint untuk mengubah atau menghapus data absensi.
+- Absensi hanya bisa dikirim role karyawan dan selalu bertipe WFH, sesuai use case absensi WFH. HRD bersifat baca saja: hanya punya akses monitoring, tanpa endpoint untuk mengubah atau menghapus data absensi.
+- Akun HRD tetap tersimpan di tabel `users`, tetapi tidak ikut ditampilkan pada pengelolaan data karyawan di frontend (`GET /api/users` dengan filter `role`).
 - Absensi menyimpan tanggal dan jam dari server. Tanggal kehadiran dihitung dengan zona `APP_TIMEZONE` (default `Asia/Jakarta`), jadi absen jam 00.30 WIB tercatat pada hari yang benar.
 - Foto disimpan di `UPLOAD_DIR` (default `uploads/attendances/<tanggal>/`) dan disajikan `core-service` lewat `/files`, lalu diteruskan gateway sebagai `/api/files/...`. Nama file memakai UUID supaya tidak bisa ditebak. Endpoint monitoring sengaja tanpa pagination karena datanya kecil.

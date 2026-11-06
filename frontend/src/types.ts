@@ -1,6 +1,6 @@
 export type Role = 'HRD' | 'EMPLOYEE';
 
-export type WorkType = 'WFH' | 'WFO';
+export type WorkType = 'WFH';
 
 export interface User {
   id: string;

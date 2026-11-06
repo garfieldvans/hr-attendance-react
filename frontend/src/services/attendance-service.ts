@@ -1,4 +1,4 @@
-import type { Attendance, MonitoredAttendance, WorkType } from '../types';
+import type { Attendance, MonitoredAttendance } from '../types';
 import { http } from './http';
 
 export interface PeriodFilters {
@@ -8,13 +8,11 @@ export interface PeriodFilters {
 
 export interface MonitoringFilters extends PeriodFilters {
   q?: string;
-  workType?: WorkType;
   userId?: string;
 }
 
 export interface SubmitAttendancePayload {
   photo: File;
-  workType: WorkType;
   notes?: string;
 }
 
@@ -28,10 +26,9 @@ export const getAttendances = async (filters: MonitoringFilters = {}) => {
   return response.data;
 };
 
-export const submitAttendance = async ({ photo, workType, notes }: SubmitAttendancePayload) => {
+export const submitAttendance = async ({ photo, notes }: SubmitAttendancePayload) => {
   const body = new FormData();
   body.append('photo', photo);
-  body.append('workType', workType);
 
   if (notes?.trim()) {
     body.append('notes', notes.trim());

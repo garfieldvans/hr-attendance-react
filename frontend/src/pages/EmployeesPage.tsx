@@ -23,7 +23,7 @@ export const EmployeesPage = () => {
     setError('');
 
     try {
-      setUsers(await getUsers(search ? { q: search } : {}));
+      setUsers(await getUsers({ role: 'EMPLOYEE', ...(search ? { q: search } : {}) }));
     } catch (loadError) {
       setError(getErrorMessage(loadError));
     } finally {

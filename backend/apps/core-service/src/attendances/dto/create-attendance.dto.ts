@@ -2,8 +2,9 @@ import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { WorkType } from '../../../../../libs/common/src';
 
 export class CreateAttendanceDto {
-  @IsEnum(WorkType, { message: 'Tipe kerja harus WFH atau WFO' })
-  workType: WorkType;
+  @IsOptional()
+  @IsEnum(WorkType, { message: 'Tipe kerja harus WFH' })
+  workType?: WorkType;
 
   @IsOptional()
   @IsString({ message: 'Catatan harus berupa teks' })

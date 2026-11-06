@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { getErrorMessage } from '../services/http';
 import { createUser, updateUser } from '../services/user-service';
-import type { EmployeeInput, Role, User } from '../types';
+import type { EmployeeInput, User } from '../types';
 import { Button } from './Button';
 import { Input } from './Input';
 
@@ -11,16 +11,12 @@ interface EmployeeDialogProps {
   onSaved: (message: string) => void;
 }
 
-const inputClass =
-  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50';
-
 export const EmployeeDialog = ({ employee, onClose, onSaved }: EmployeeDialogProps) => {
   const [values, setValues] = useState({
     employeeCode: employee?.employeeCode ?? '',
     name: employee?.name ?? '',
     email: employee?.email ?? '',
     password: '',
-    role: employee?.role ?? ('EMPLOYEE' as Role),
     position: employee?.position ?? '',
     department: employee?.department ?? '',
     phone: employee?.phone ?? '',
@@ -64,7 +60,7 @@ export const EmployeeDialog = ({ employee, onClose, onSaved }: EmployeeDialogPro
       employeeCode: values.employeeCode,
       name: values.name,
       email: values.email,
-      role: values.role,
+      role: 'EMPLOYEE',
       isActive: values.isActive,
       ...(values.position.trim() ? { position: values.position.trim() } : {}),
       ...(values.department.trim() ? { department: values.department.trim() } : {}),
@@ -156,20 +152,6 @@ export const EmployeeDialog = ({ employee, onClose, onSaved }: EmployeeDialogPro
               onChange={(event) => setField('password', event.target.value)}
             />
 
-            <div className="space-y-1.5">
-              <label htmlFor="employee-role" className="block text-sm font-medium text-slate-700">
-                Role
-              </label>
-              <select
-                id="employee-role"
-                value={values.role}
-                onChange={(event) => setField('role', event.target.value as Role)}
-                className={inputClass}
-              >
-                <option value="EMPLOYEE">Karyawan</option>
-                <option value="HRD">HRD</option>
-              </select>
-            </div>
             <Input
               label="Tanggal masuk"
               type="date"

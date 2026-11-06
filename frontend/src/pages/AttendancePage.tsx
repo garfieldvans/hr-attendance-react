@@ -6,18 +6,12 @@ import { PhotoCapture } from '../components/PhotoCapture';
 import { formatFullDate, formatShortDate, formatTime, todayValue } from '../lib/datetime';
 import { getMyAttendances, submitAttendance } from '../services/attendance-service';
 import { getErrorMessage } from '../services/http';
-import type { Attendance, WorkType } from '../types';
-
-const workTypes: { value: WorkType; label: string; description: string }[] = [
-  { value: 'WFH', label: 'WFH', description: 'Kerja dari rumah' },
-  { value: 'WFO', label: 'WFO', description: 'Kerja dari kantor' },
-];
+import type { Attendance } from '../types';
 
 export const AttendancePage = () => {
   const [history, setHistory] = useState<Attendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const [workType, setWorkType] = useState<WorkType>('WFH');
   const [notes, setNotes] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -56,10 +50,9 @@ export const AttendancePage = () => {
     setSubmitting(true);
 
     try {
-      await submitAttendance({ photo, workType, notes });
+      await submitAttendance({ photo, notes });
       setPhoto(null);
       setNotes('');
-      setWorkType('WFH');
       setNotice('Absensi hari ini berhasil dikirim.');
       await loadHistory();
     } catch (error) {
@@ -89,9 +82,7 @@ export const AttendancePage = () => {
               />
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Badge tone={todayAttendance.workType === 'WFH' ? 'brand' : 'neutral'}>
-                    {todayAttendance.workType}
-                  </Badge>
+                  <Badge tone="brand">{todayAttendance.workType}</Badge>
                   <Badge tone="success">Tercatat</Badge>
                 </div>
                 <p className="text-sm text-slate-600">
@@ -109,27 +100,11 @@ export const AttendancePage = () => {
         ) : (
           <Card title="Kirim absensi" description="Satu kali per hari, tanpa check-out">
             <div className="space-y-5">
-              <div>
-                <p className="mb-2 block text-sm font-medium text-slate-700">Tipe kerja</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {workTypes.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setWorkType(option.value)}
-                      className={`rounded-lg border px-4 py-3 text-left transition ${
-                        workType === option.value
-                          ? 'border-indigo-400 bg-indigo-50 ring-2 ring-indigo-100'
-                          : 'border-slate-200 bg-white hover:bg-slate-50'
-                      }`}
-                    >
-                      <span className="block text-sm font-semibold text-slate-900">
-                        {option.label}
-                      </span>
-                      <span className="block text-xs text-slate-500">{option.description}</span>
-                    </button>
-                  ))}
-                </div>
+              <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3">
+                <p className="text-sm font-semibold text-slate-900">WFH · kerja dari rumah</p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Sertakan foto sebagai bukti kamu sedang bekerja dari rumah.
+                </p>
               </div>
 
               <div>
@@ -218,7 +193,7 @@ export const AttendancePage = () => {
                       {item.notes ? ` · ${item.notes}` : ''}
                     </p>
                   </div>
-                  <Badge tone={item.workType === 'WFH' ? 'brand' : 'neutral'}>{item.workType}</Badge>
+                  <Badge tone="brand">{item.workType}</Badge>
                 </li>
               ))}
             </ul>
