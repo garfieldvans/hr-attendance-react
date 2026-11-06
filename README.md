@@ -65,9 +65,7 @@ cp .env.example .env
 npm install
 npm run migrate:auth && npm run migrate:core
 npm run seed
-npm run dev:auth      # terminal 1, port 3001
-npm run dev:core      # terminal 2, port 3002
-npm run dev:gateway   # terminal 3, port 3000
+npm run dev           # gateway :3000, auth :3001, core :3002
 ```
 
 Frontend, dari folder `frontend`:
