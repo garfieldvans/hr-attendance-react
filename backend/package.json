@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "dev": "node scripts/dev.js",
     "dev:gateway": "node --watch -r ts-node/register apps/api-gateway/src/main.ts",
     "dev:auth": "node --watch -r ts-node/register apps/auth-service/src/main.ts",
     "dev:core": "node --watch -r ts-node/register apps/core-service/src/main.ts",

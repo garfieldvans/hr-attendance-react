@@ -29,15 +29,13 @@ npm run migrate:core
 npm run seed
 ```
 
-Lalu jalankan ketiga app di terminal terpisah:
+Lalu jalankan semua service sekaligus:
 
 ```bash
-npm run dev:auth
-npm run dev:core
-npm run dev:gateway
+npm run dev
 ```
 
-Masing-masing berjalan dengan watch mode, jadi perubahan file langsung dimuat ulang. Cek dengan `curl http://localhost:3000/health`, `:3001/health`, dan `:3002/health`.
+Perintah ini menyalakan gateway (`:3000`), auth (`:3001`), dan core (`:3002`) dengan watch mode serta prefix log per service. Kalau MySQL belum menerima koneksi di `DB_HOST:DB_PORT`, script otomatis menjalankan `docker compose up -d` lebih dulu dan menunggu sampai siap. Ctrl+C mematikan ketiga service sekaligus. Untuk menjalankan satu app saja, pakai `npm run dev:auth`, `npm run dev:core`, atau `npm run dev:gateway`. Cek dengan `curl http://localhost:3000/health`, `:3001/health`, dan `:3002/health`.
 
 Untuk mode produksi:
 
@@ -52,7 +50,8 @@ npm run start:gateway
 
 | Script | Kegunaan |
 | --- | --- |
-| `npm run dev:<app>` | jalankan app dengan watch mode |
+| `npm run dev` | jalankan gateway, auth, dan core sekaligus (sekaligus menyiapkan MySQL) |
+| `npm run dev:<app>` | jalankan satu app dengan watch mode |
 | `npm run build` | kompilasi semua app ke `dist/` |
 | `npm run typecheck` | cek tipe tanpa menghasilkan file |
 | `npm run migrate:auth` | migrasi tabel `users` |
