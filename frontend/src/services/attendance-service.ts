@@ -30,6 +30,11 @@ export const getAttendances = async (filters: MonitoringFilters = {}) => {
   return response.data;
 };
 
+export const submitCheckOut = async () => {
+  const response = await http.patch<Attendance>('/attendances/me/check-out');
+  return response.data;
+};
+
 export const submitAttendance = async ({ photo, notes }: SubmitAttendancePayload) => {
   const body = new FormData();
   body.append('photo', photo);

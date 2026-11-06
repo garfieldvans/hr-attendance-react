@@ -28,6 +28,7 @@ const attendanceFields = [
   'id',
   "DATE_FORMAT(attendance_date, '%Y-%m-%d') AS attendanceDate",
   'check_in_at AS checkInAt',
+  'check_out_at AS checkOutAt',
   'work_type AS workType',
   'notes',
   'photo_path AS photoPath',
@@ -89,6 +90,32 @@ export class AttendancesService {
     }
   }
 
+  async checkOut(userId: string) {
+    const todayRows = await this.dataSource.query<{ id: string; checkOutAt: Date | null }[]>(
+      `SELECT id, check_out_at AS checkOutAt FROM attendances
+       WHERE user_id = ? AND attendance_date = ? LIMIT 1`,
+      [userId, toAppDate(new Date())],
+    );
+    const today = todayRows[0];
+
+    if (!today) {
+      throw new BadRequestException('Kamu belum absen hari ini');
+    }
+
+    if (today.checkOutAt) {
+      throw new ConflictException('Kamu sudah absen pulang hari ini');
+    }
+
+    await this.attendances.update(today.id, { checkOutAt: new Date() });
+
+    const rows = await this.dataSource.query<AttendanceRecord[]>(
+      `SELECT ${attendanceFields} FROM attendances WHERE id = ? LIMIT 1`,
+      [today.id],
+    );
+
+    return toAttendanceView(rows[0]);
+  }
+
   async findMine(userId: string, period: QueryPeriodDto) {
     const conditions = ['user_id = ?'];
     const params: string[] = [userId];
@@ -148,7 +175,7 @@ export class AttendancesService {
     const where = `WHERE ${conditions.join(' AND ')}`;
     const rows = await this.dataSource.query<MonitoringRow[]>(
       `SELECT a.id, DATE_FORMAT(a.attendance_date, '%Y-%m-%d') AS attendanceDate,
-              a.check_in_at AS checkInAt,
+              a.check_in_at AS checkInAt, a.check_out_at AS checkOutAt,
               a.work_type AS workType, a.notes, a.photo_path AS photoPath,
               u.id AS employeeId, u.employee_code AS employeeCode, u.name AS employeeName,
               u.position AS employeePosition, u.department AS employeeDepartment

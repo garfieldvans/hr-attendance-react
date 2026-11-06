@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Post,
   Query,
   UploadedFile,
@@ -36,6 +37,12 @@ export class AttendancesController {
     @UploadedFile() photo?: Express.Multer.File,
   ) {
     return this.attendancesService.create(user, photo, dto);
+  }
+
+  @Patch('me/check-out')
+  @Roles(Role.EMPLOYEE)
+  checkOut(@CurrentUser() user: JwtPayload) {
+    return this.attendancesService.checkOut(user.sub);
   }
 
   @Get('me')

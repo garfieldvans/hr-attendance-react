@@ -32,6 +32,7 @@ export interface Attendance {
   id: string;
   attendanceDate: string;
   checkInAt: string;
+  checkOutAt: string | null;
   workType: WorkType;
   notes: string | null;
   photoUrl: string;

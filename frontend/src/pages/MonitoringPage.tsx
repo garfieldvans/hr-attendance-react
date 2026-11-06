@@ -164,13 +164,14 @@ export const MonitoringPage = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] text-left text-sm">
+            <table className="w-full min-w-[920px] text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-500">
                   <th className="px-5 py-3 font-medium">Foto</th>
                   <th className="px-5 py-3 font-medium">Karyawan</th>
                   <th className="px-5 py-3 font-medium">Tanggal</th>
                   <th className="px-5 py-3 font-medium">Masuk</th>
+                  <th className="px-5 py-3 font-medium">Pulang</th>
                   <th className="px-5 py-3 font-medium">Tipe</th>
                   <th className="px-5 py-3 font-medium">Catatan</th>
                 </tr>
@@ -179,7 +180,7 @@ export const MonitoringPage = () => {
                 {loading
                   ? Array.from({ length: 4 }).map((_, index) => (
                       <tr key={index}>
-                        {Array.from({ length: 6 }).map((__, cell) => (
+                        {Array.from({ length: 7 }).map((__, cell) => (
                           <td key={cell} className="px-5 py-4">
                             <div className="h-3 w-24 animate-pulse rounded bg-slate-100" />
                           </td>
@@ -222,7 +223,16 @@ export const MonitoringPage = () => {
                         <td className="px-5 py-3 text-slate-600">
                           {formatShortDate(row.attendanceDate)}
                         </td>
-                        <td className="px-5 py-3 text-slate-600">{formatTime(row.checkInAt)}</td>
+                        <td className="px-5 py-3 text-slate-600">
+                          {formatTime(row.checkInAt)}
+                        </td>
+                        <td className="px-5 py-3 text-slate-600">
+                          {row.checkOutAt ? (
+                            formatTime(row.checkOutAt)
+                          ) : (
+                            <span className="text-slate-400">Belum absen pulang</span>
+                          )}
+                        </td>
                         <td className="px-5 py-3">
                           <Badge tone="brand">{row.workType}</Badge>
                         </td>
@@ -297,7 +307,9 @@ export const MonitoringPage = () => {
                   {active.employee?.name ?? 'Karyawan'}
                 </p>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  {formatFullDate(active.attendanceDate)} · masuk {formatTime(active.checkInAt)} ·{' '}
+                  {formatFullDate(active.attendanceDate)} · masuk {formatTime(active.checkInAt)} ·
+                  pulang{' '}
+                  {active.checkOutAt ? formatTime(active.checkOutAt) : 'belum absen pulang'} ·{' '}
                   {active.workType}
                 </p>
                 {active.notes && <p className="mt-1 text-xs text-slate-500">{active.notes}</p>}

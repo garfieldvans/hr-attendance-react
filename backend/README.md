@@ -72,6 +72,7 @@ Semua request dari frontend masuk lewat gateway.
 | PATCH | `/api/users/:id` | HRD | ubah data karyawan, termasuk password dan status aktif |
 | DELETE | `/api/users/:id` | HRD | hapus karyawan, ditolak bila sudah punya data absensi |
 | POST | `/api/attendances` | karyawan | kirim absensi, `multipart/form-data` dengan `photo` (JPG/PNG/WebP, maks 5 MB) dan `notes` opsional; `workType` selalu `WFH` |
+| PATCH | `/api/attendances/me/check-out` | karyawan | absen pulang hari ini; ditolak bila belum absen masuk atau sudah absen pulang |
 | GET | `/api/attendances/me` | bearer token | riwayat absensi sendiri, bisa difilter `from` dan `to` (`YYYY-MM-DD`) |
 | GET | `/api/attendances` | HRD | monitoring absensi hari ini, difilter `from`, `to`, `q`, `userId`, dengan pagination `page` dan `limit` |
 | GET | `/api/files/...` | publik | file foto absensi |
@@ -87,6 +88,7 @@ Semua request dari frontend masuk lewat gateway.
 - Absensi hanya bisa dikirim role karyawan dan selalu bertipe WFH, sesuai use case absensi WFH. HRD bersifat baca saja: hanya punya akses monitoring, tanpa endpoint untuk mengubah atau menghapus data absensi.
 - Akun HRD tetap tersimpan di tabel `users`, tetapi tidak ikut ditampilkan pada pengelolaan data karyawan di frontend (`GET /api/users` dengan filter `role`).
 - Absensi menyimpan tanggal dan jam dari server. Tanggal kehadiran dihitung dengan zona `APP_TIMEZONE` (default `Asia/Jakarta`), jadi absen jam 00.30 WIB tercatat pada hari yang benar.
+- Absen pulang hanya mengisi `check_out_at` pada baris absensi hari itu, sehingga tetap satu baris per hari. Kolom ini nullable: bila karyawan tidak absen pulang, nilainya `null` dan ditampilkan sebagai "Belum absen pulang".
 - Foto disimpan di `UPLOAD_DIR` (default `uploads/attendances/<tanggal>/`) dan disajikan `core-service` lewat `/files`, lalu diteruskan gateway sebagai `/api/files/...`. Nama file memakai UUID supaya tidak bisa ditebak.
 - Endpoint daftar karyawan dan monitoring mengembalikan `{ items, meta }` dengan `page` (default 1) dan `limit` (default 10, maksimal 50), jadi `total` dan `totalPages` sudah dihitung server. Filter `q` pada monitoring menyaring berdasarkan nama atau kode karyawan.
 - Operasi baca (login, profil, daftar karyawan, absensi, monitoring) memakai query SQL langsung lewat `DataSource.query`; penulisan data tetap lewat repository TypeORM agar validasi dan relasi aman.
