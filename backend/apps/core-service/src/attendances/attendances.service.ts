@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, QueryFailedError, Repository } from 'typeorm';
-import { JwtPayload } from '../../../../libs/common/src';
+import { JwtPayload, WorkType } from '../../../../libs/common/src';
 import { toAppDate } from './app-date';
 import { Attendance } from './attendance.entity';
 import { toAttendanceView, toMonitoredView } from './attendance.mapper';
@@ -46,7 +46,7 @@ export class AttendancesService {
           attendanceDate,
           checkInAt,
           photoPath,
-          workType: dto.workType,
+          workType: dto.workType ?? WorkType.WFH,
           notes: dto.notes?.trim() || null,
         }),
       );
@@ -101,10 +101,6 @@ export class AttendancesService {
       }
     } else {
       query.andWhere('attendance.attendanceDate = :today', { today: toAppDate(new Date()) });
-    }
-
-    if (filters.workType) {
-      query.andWhere('attendance.workType = :workType', { workType: filters.workType });
     }
 
     if (filters.userId) {

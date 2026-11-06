@@ -5,13 +5,7 @@ import { Card } from '../components/Card';
 import { formatFullDate, formatShortDate, formatTime, todayValue } from '../lib/datetime';
 import { getAttendances } from '../services/attendance-service';
 import { getErrorMessage } from '../services/http';
-import type { MonitoredAttendance, WorkType } from '../types';
-
-const workTypeOptions: { value: WorkType | ''; label: string }[] = [
-  { value: '', label: 'Semua tipe' },
-  { value: 'WFH', label: 'WFH' },
-  { value: 'WFO', label: 'WFO' },
-];
+import type { MonitoredAttendance } from '../types';
 
 const inputClass =
   'w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50';
@@ -20,7 +14,6 @@ export const MonitoringPage = () => {
   const [from, setFrom] = useState(todayValue);
   const [to, setTo] = useState(todayValue);
   const [keyword, setKeyword] = useState('');
-  const [workType, setWorkType] = useState<WorkType | ''>('');
   const [rows, setRows] = useState<MonitoredAttendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,7 +31,6 @@ export const MonitoringPage = () => {
           from: from || undefined,
           to: to || undefined,
           q: keyword.trim() || undefined,
-          workType: workType || undefined,
         }),
       );
     } catch (loadError) {
@@ -46,7 +38,7 @@ export const MonitoringPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [from, keyword, to, workType]);
+  }, [from, keyword, to]);
 
   useEffect(() => {
     if (rangeInvalid) {
@@ -88,7 +80,7 @@ export const MonitoringPage = () => {
       </div>
 
       <Card>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-1.5">
             <label htmlFor="from" className="block text-sm font-medium text-slate-700">
               Dari tanggal
@@ -125,23 +117,6 @@ export const MonitoringPage = () => {
               onChange={(event) => setKeyword(event.target.value)}
               className={inputClass}
             />
-          </div>
-          <div className="space-y-1.5">
-            <label htmlFor="workType" className="block text-sm font-medium text-slate-700">
-              Tipe kerja
-            </label>
-            <select
-              id="workType"
-              value={workType}
-              onChange={(event) => setWorkType(event.target.value as WorkType | '')}
-              className={inputClass}
-            >
-              {workTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
       </Card>
@@ -219,9 +194,7 @@ export const MonitoringPage = () => {
                         </td>
                         <td className="px-5 py-3 text-slate-600">{formatTime(row.checkInAt)}</td>
                         <td className="px-5 py-3">
-                          <Badge tone={row.workType === 'WFH' ? 'brand' : 'neutral'}>
-                            {row.workType}
-                          </Badge>
+                          <Badge tone="brand">{row.workType}</Badge>
                         </td>
                         <td className="max-w-[220px] px-5 py-3 text-slate-600">
                           <p className="truncate">{row.notes ?? '-'}</p>
