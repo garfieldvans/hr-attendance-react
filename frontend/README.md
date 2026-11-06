@@ -1,6 +1,6 @@
 # Frontend
 
-Antarmuka aplikasi absensi: login, absen masuk dengan foto, riwayat absensi, dan halaman monitoring untuk HRD.
+Antarmuka aplikasi absensi: login, absen masuk dengan foto, absen pulang, riwayat absensi, dan halaman monitoring untuk HRD.
 
 ## Stack
 
@@ -54,6 +54,7 @@ src/
 - Monitoring dan data karyawan memuat 10 baris per halaman lewat parameter `page` dan `limit`; posisi halaman ikut direset saat filter atau kata kunci berubah, dan kembali ke halaman sebelumnya bila baris terakhir pada halaman itu dihapus.
 - Data karyawan bisa disaring berdasarkan kata kunci (nama, kode, email) dan status aktif, lalu digabung dengan pagination; jumlah baris di footer mengikuti hasil filter.
 - Halaman detail karyawan (`/karyawan/:id`) mengambil profil dari `GET /api/users/:id` dan 5 absensi terbaru dari `GET /api/attendances?userId=...`. Nama karyawan di tabel monitoring dan data karyawan menjadi tautan ke halaman ini.
+- Tombol "Absen pulang" memanggil `PATCH /api/attendances/me/check-out` dan hanya muncul untuk absensi hari ini yang belum punya jam pulang. Absensi tanpa jam pulang ditampilkan sebagai "Belum absen pulang", termasuk di tabel monitoring HRD.
 
 ## Kamera
 

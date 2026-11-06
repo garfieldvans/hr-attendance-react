@@ -6,8 +6,8 @@ Aplikasi absensi WFH dan monitoring karyawan. Backend dan frontend berada di sat
 
 **Karyawan**
 
-- Login, lalu absen WFH sekali sehari dengan foto bukti kerja dan catatan opsional.
-- Melihat riwayat absensi sendiri beserta status hari ini.
+- Login, lalu absen masuk WFH sekali sehari dengan foto bukti kerja dan catatan opsional, serta absen pulang saat selesai bekerja.
+- Melihat riwayat absensi sendiri beserta status masuk dan pulang hari ini.
 
 **HRD**
 
@@ -19,7 +19,8 @@ Aplikasi absensi WFH dan monitoring karyawan. Backend dan frontend berada di sat
 ## Aturan absensi
 
 - Hanya role karyawan yang bisa mengirim absensi; HRD mendapat 403 dan menu Absensi tidak muncul untuk HRD.
-- Satu absensi per hari, tanpa check-out. Tanggal dan jam diambil dari server memakai zona `APP_TIMEZONE` (default `Asia/Jakarta`).
+- Satu absensi per hari: satu absen masuk, lalu satu absen pulang pada baris yang sama. Tanggal dan jam diambil dari server memakai zona `APP_TIMEZONE` (default `Asia/Jakarta`).
+- Absen pulang tidak wajib. Kalau karyawan lupa, jam pulang dibiarkan kosong dan statusnya tampil sebagai "Belum absen pulang" di halaman absensi maupun monitoring HRD.
 - Tipe kerja selalu WFH.
 - Foto wajib diunggah (JPG/PNG/WebP, maksimal 5 MB), bisa lewat kamera atau pilih file.
 - Tidak ada registrasi mandiri. Akun karyawan dibuat HRD, dan akun HRD tidak ikut tampil di daftar karyawan.

@@ -164,7 +164,8 @@ export const EmployeeDetailPage = () => {
                   />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-slate-800">
-                      {formatFullDate(item.attendanceDate)} · masuk {formatTime(item.checkInAt)}
+                      {formatFullDate(item.attendanceDate)} · masuk {formatTime(item.checkInAt)} ·
+                      pulang {item.checkOutAt ? formatTime(item.checkOutAt) : 'belum absen pulang'}
                     </p>
                     <p className="truncate text-xs text-slate-500">{item.notes ?? 'Tanpa catatan'}</p>
                   </div>

@@ -4,7 +4,7 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { PhotoCapture } from '../components/PhotoCapture';
 import { formatFullDate, formatShortDate, formatTime, todayValue } from '../lib/datetime';
-import { getMyAttendances, submitAttendance } from '../services/attendance-service';
+import { getMyAttendances, submitAttendance, submitCheckOut } from '../services/attendance-service';
 import { getErrorMessage } from '../services/http';
 import type { Attendance } from '../types';
 
@@ -15,7 +15,9 @@ export const AttendancePage = () => {
   const [notes, setNotes] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
   const [formError, setFormError] = useState('');
+  const [checkOutError, setCheckOutError] = useState('');
   const [notice, setNotice] = useState('');
 
   const loadHistory = useCallback(async () => {
@@ -62,6 +64,22 @@ export const AttendancePage = () => {
     }
   };
 
+  const handleCheckOut = async () => {
+    setCheckOutError('');
+    setNotice('');
+    setCheckingOut(true);
+
+    try {
+      await submitCheckOut();
+      setNotice('Absen pulang tercatat.');
+      await loadHistory();
+    } catch (error) {
+      setCheckOutError(getErrorMessage(error));
+    } finally {
+      setCheckingOut(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -73,17 +91,29 @@ export const AttendancePage = () => {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {todayAttendance ? (
-          <Card title="Absensi hari ini" description="Kamu sudah absen, tidak perlu absen ulang">
+          <Card
+            title="Absensi hari ini"
+            description={
+              todayAttendance.checkOutAt
+                ? 'Absensi hari ini sudah lengkap'
+                : 'Kamu sudah absen masuk, absen pulang saat selesai bekerja'
+            }
+          >
             <div className="flex flex-col gap-4 sm:flex-row">
               <img
                 src={todayAttendance.photoUrl}
                 alt="Foto bukti absensi hari ini"
                 className="h-32 w-full rounded-xl object-cover sm:w-32"
               />
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
+              <div className="flex-1 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge tone="brand">{todayAttendance.workType}</Badge>
                   <Badge tone="success">Tercatat</Badge>
+                  {todayAttendance.checkOutAt ? (
+                    <Badge tone="neutral">Selesai</Badge>
+                  ) : (
+                    <Badge tone="neutral">Belum absen pulang</Badge>
+                  )}
                 </div>
                 <p className="text-sm text-slate-600">
                   Masuk pukul{' '}
@@ -91,14 +121,40 @@ export const AttendancePage = () => {
                     {formatTime(todayAttendance.checkInAt)}
                   </span>
                 </p>
+                {todayAttendance.checkOutAt && (
+                  <p className="text-sm text-slate-600">
+                    Pulang pukul{' '}
+                    <span className="font-semibold text-slate-900">
+                      {formatTime(todayAttendance.checkOutAt)}
+                    </span>
+                  </p>
+                )}
                 {todayAttendance.notes && (
                   <p className="text-sm text-slate-500">{todayAttendance.notes}</p>
+                )}
+
+                {!todayAttendance.checkOutAt && (
+                  <div className="pt-1">
+                    {checkOutError && (
+                      <p className="mb-2 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">
+                        {checkOutError}
+                      </p>
+                    )}
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      loading={checkingOut}
+                      onClick={() => void handleCheckOut()}
+                    >
+                      Absen pulang
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
           </Card>
         ) : (
-          <Card title="Kirim absensi" description="Satu kali per hari, tanpa check-out">
+          <Card title="Kirim absensi" description="Satu kali absen masuk per hari">
             <div className="space-y-5">
               <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3">
                 <p className="text-sm font-semibold text-slate-900">WFH · kerja dari rumah</p>
@@ -190,6 +246,9 @@ export const AttendancePage = () => {
                     </p>
                     <p className="truncate text-xs text-slate-500">
                       Masuk {formatTime(item.checkInAt)}
+                      {item.checkOutAt
+                        ? ` · Pulang ${formatTime(item.checkOutAt)}`
+                        : ' · Belum absen pulang'}
                       {item.notes ? ` · ${item.notes}` : ''}
                     </p>
                   </div>

@@ -26,6 +26,9 @@ export class Attendance {
   @Column({ name: 'check_in_at', type: 'datetime' })
   checkInAt: Date;
 
+  @Column({ name: 'check_out_at', type: 'datetime', nullable: true })
+  checkOutAt: Date | null;
+
   @Column({ name: 'photo_path', length: 255 })
   photoPath: string;
 

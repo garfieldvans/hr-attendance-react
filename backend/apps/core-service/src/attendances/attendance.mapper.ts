@@ -4,6 +4,7 @@ export interface AttendanceRecord {
   id: string;
   attendanceDate: string;
   checkInAt: Date;
+  checkOutAt: Date | null;
   workType: WorkType;
   notes: string | null;
   photoPath: string;
@@ -21,6 +22,7 @@ export interface AttendanceView {
   id: string;
   attendanceDate: string;
   checkInAt: string;
+  checkOutAt: string | null;
   workType: WorkType;
   notes: string | null;
   photoUrl: string;
@@ -36,6 +38,7 @@ export const toAttendanceView = (attendance: AttendanceRecord): AttendanceView =
   id: attendance.id,
   attendanceDate: attendance.attendanceDate,
   checkInAt: attendance.checkInAt.toISOString(),
+  checkOutAt: attendance.checkOutAt?.toISOString() ?? null,
   workType: attendance.workType,
   notes: attendance.notes,
   photoUrl: publicPhotoUrl(attendance.photoPath),
