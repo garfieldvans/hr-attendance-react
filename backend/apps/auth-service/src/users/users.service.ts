@@ -1,7 +1,8 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { hash } from 'bcryptjs';
-import { QueryFailedError, Repository } from 'typeorm';
+import { DataSource, QueryFailedError, Repository } from 'typeorm';
+import { Role } from '../../../../libs/common/src';
 import { CreateUserDto } from './dto/create-user.dto';
 import { QueryUsersDto } from './dto/query-users.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -9,46 +10,101 @@ import { User } from './user.entity';
 
 const passwordSaltRounds = 10;
 
+interface UserRow {
+  id: string;
+  employeeCode: string;
+  name: string;
+  email: string;
+  passwordHash: string;
+  role: Role;
+  position: string | null;
+  department: string | null;
+  phone: string | null;
+  joinDate: string | null;
+  isActive: number | boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const userFields = [
+  'id',
+  'employee_code AS employeeCode',
+  'name',
+  'email',
+  'password_hash AS passwordHash',
+  'role',
+  'position',
+  'department',
+  'phone',
+  "DATE_FORMAT(join_date, '%Y-%m-%d') AS joinDate",
+  'is_active AS isActive',
+  'created_at AS createdAt',
+  'updated_at AS updatedAt',
+].join(', ');
+
+const toUser = (row: UserRow): User => ({
+  ...row,
+  isActive: Boolean(row.isActive),
+});
+
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly repository: Repository<User>,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
-  findByEmail(email: string) {
-    return this.repository.findOne({ where: { email: email.trim().toLowerCase() } });
+  async findByEmail(email: string) {
+    const rows = await this.dataSource.query<UserRow[]>(
+      `SELECT ${userFields} FROM users WHERE email = ? LIMIT 1`,
+      [email.trim().toLowerCase()],
+    );
+
+    return rows.length ? toUser(rows[0]) : null;
   }
 
-  findById(id: string) {
+  async findById(id: string) {
     if (!/^\d+$/.test(id)) {
-      return Promise.resolve(null);
+      return null;
     }
 
-    return this.repository.findOne({ where: { id } });
+    const rows = await this.dataSource.query<UserRow[]>(
+      `SELECT ${userFields} FROM users WHERE id = ? LIMIT 1`,
+      [id],
+    );
+
+    return rows.length ? toUser(rows[0]) : null;
   }
 
-  findAll(filters: QueryUsersDto) {
-    const query = this.repository
-      .createQueryBuilder('user')
-      .orderBy('user.employeeCode', 'ASC');
+  async findAll(filters: QueryUsersDto) {
+    const conditions: string[] = [];
+    const params: (string | number)[] = [];
 
     if (filters.q) {
-      query.andWhere(
-        '(user.name LIKE :keyword OR user.employeeCode LIKE :keyword OR user.email LIKE :keyword)',
-        { keyword: `%${filters.q.trim()}%` },
-      );
+      const keyword = `%${filters.q.trim()}%`;
+      conditions.push('(name LIKE ? OR employee_code LIKE ? OR email LIKE ?)');
+      params.push(keyword, keyword, keyword);
     }
 
     if (filters.role) {
-      query.andWhere('user.role = :role', { role: filters.role });
+      conditions.push('role = ?');
+      params.push(filters.role);
     }
 
     if (filters.isActive !== undefined) {
-      query.andWhere('user.isActive = :isActive', { isActive: filters.isActive });
+      conditions.push('is_active = ?');
+      params.push(filters.isActive ? 1 : 0);
     }
 
-    return query.getMany();
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const rows = await this.dataSource.query<UserRow[]>(
+      `SELECT ${userFields} FROM users ${where} ORDER BY employee_code ASC`,
+      params,
+    );
+
+    return rows.map(toUser);
   }
 
   async findDetail(id: string) {
@@ -122,17 +178,21 @@ export class UsersService {
   }
 
   private async assertUnique(email: string, employeeCode: string, exceptId?: string) {
-    const emailOwner = await this.repository.findOne({
-      where: { email: email.trim().toLowerCase() },
-    });
+    const emailOwners = await this.dataSource.query<{ id: string }[]>(
+      'SELECT id FROM users WHERE email = ? LIMIT 1',
+      [email.trim().toLowerCase()],
+    );
 
-    if (emailOwner && emailOwner.id !== exceptId) {
+    if (emailOwners.length && emailOwners[0].id !== exceptId) {
       throw new ConflictException('Email sudah dipakai karyawan lain');
     }
 
-    const codeOwner = await this.repository.findOne({ where: { employeeCode } });
+    const codeOwners = await this.dataSource.query<{ id: string }[]>(
+      'SELECT id FROM users WHERE employee_code = ? LIMIT 1',
+      [employeeCode],
+    );
 
-    if (codeOwner && codeOwner.id !== exceptId) {
+    if (codeOwners.length && codeOwners[0].id !== exceptId) {
       throw new ConflictException('Kode karyawan sudah dipakai');
     }
   }

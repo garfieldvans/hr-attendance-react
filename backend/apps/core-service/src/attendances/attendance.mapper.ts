@@ -1,6 +1,21 @@
 import { WorkType } from '../../../../libs/common/src';
-import { Attendance } from './attendance.entity';
-import { Employee } from './employee.entity';
+
+export interface AttendanceRecord {
+  id: string;
+  attendanceDate: string;
+  checkInAt: Date;
+  workType: WorkType;
+  notes: string | null;
+  photoPath: string;
+}
+
+export interface EmployeeSummary {
+  id: string;
+  employeeCode: string;
+  name: string;
+  position: string | null;
+  department: string | null;
+}
 
 export interface AttendanceView {
   id: string;
@@ -12,18 +27,12 @@ export interface AttendanceView {
 }
 
 export interface MonitoredAttendanceView extends AttendanceView {
-  employee: {
-    id: string;
-    employeeCode: string;
-    name: string;
-    position: string | null;
-    department: string | null;
-  } | null;
+  employee: EmployeeSummary | null;
 }
 
 const publicPhotoUrl = (photoPath: string) => `/api/files/${photoPath}`;
 
-export const toAttendanceView = (attendance: Attendance): AttendanceView => ({
+export const toAttendanceView = (attendance: AttendanceRecord): AttendanceView => ({
   id: attendance.id,
   attendanceDate: attendance.attendanceDate,
   checkInAt: attendance.checkInAt.toISOString(),
@@ -33,17 +42,9 @@ export const toAttendanceView = (attendance: Attendance): AttendanceView => ({
 });
 
 export const toMonitoredView = (
-  attendance: Attendance,
-  employee?: Employee,
+  attendance: AttendanceRecord,
+  employee: EmployeeSummary | null,
 ): MonitoredAttendanceView => ({
   ...toAttendanceView(attendance),
-  employee: employee
-    ? {
-        id: employee.id,
-        employeeCode: employee.employeeCode,
-        name: employee.name,
-        position: employee.position,
-        department: employee.department,
-      }
-    : null,
+  employee,
 });

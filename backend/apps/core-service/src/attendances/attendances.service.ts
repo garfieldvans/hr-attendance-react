@@ -1,25 +1,45 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { In, QueryFailedError, Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, QueryFailedError, Repository } from 'typeorm';
 import { JwtPayload, WorkType } from '../../../../libs/common/src';
 import { toAppDate } from './app-date';
 import { Attendance } from './attendance.entity';
-import { toAttendanceView, toMonitoredView } from './attendance.mapper';
+import {
+  AttendanceRecord,
+  toAttendanceView,
+  toMonitoredView,
+} from './attendance.mapper';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { QueryAttendancesDto, QueryPeriodDto } from './dto/query-attendances.dto';
-import { Employee } from './employee.entity';
 import { relativePhotoPath, removePhoto } from './photo-storage';
 
 const duplicateEntryError = 1062;
 const defaultPageSize = 10;
+
+interface MonitoringRow extends AttendanceRecord {
+  employeeId: string;
+  employeeCode: string;
+  employeeName: string;
+  employeePosition: string | null;
+  employeeDepartment: string | null;
+}
+
+const attendanceFields = [
+  'id',
+  "DATE_FORMAT(attendance_date, '%Y-%m-%d') AS attendanceDate",
+  'check_in_at AS checkInAt',
+  'work_type AS workType',
+  'notes',
+  'photo_path AS photoPath',
+].join(', ');
 
 @Injectable()
 export class AttendancesService {
   constructor(
     @InjectRepository(Attendance)
     private readonly attendances: Repository<Attendance>,
-    @InjectRepository(Employee)
-    private readonly employees: Repository<Employee>,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(user: JwtPayload, photo: Express.Multer.File | undefined, dto: CreateAttendanceDto) {
@@ -31,11 +51,12 @@ export class AttendancesService {
     const checkInAt = new Date();
     const attendanceDate = toAppDate(checkInAt);
 
-    const existing = await this.attendances.findOne({
-      where: { userId: user.sub, attendanceDate },
-    });
+    const existing = await this.dataSource.query<{ id: string }[]>(
+      'SELECT id FROM attendances WHERE user_id = ? AND attendance_date = ? LIMIT 1',
+      [user.sub, attendanceDate],
+    );
 
-    if (existing) {
+    if (existing.length) {
       await removePhoto(photoPath);
       throw new ConflictException('Kamu sudah absen hari ini');
     }
@@ -69,64 +90,91 @@ export class AttendancesService {
   }
 
   async findMine(userId: string, period: QueryPeriodDto) {
-    const query = this.attendances
-      .createQueryBuilder('attendance')
-      .where('attendance.userId = :userId', { userId })
-      .orderBy('attendance.attendanceDate', 'DESC');
+    const conditions = ['user_id = ?'];
+    const params: string[] = [userId];
 
     if (period.from) {
-      query.andWhere('attendance.attendanceDate >= :from', { from: period.from });
+      conditions.push('attendance_date >= ?');
+      params.push(period.from);
     }
 
     if (period.to) {
-      query.andWhere('attendance.attendanceDate <= :to', { to: period.to });
+      conditions.push('attendance_date <= ?');
+      params.push(period.to);
     }
 
-    const attendances = await query.getMany();
-    return attendances.map(toAttendanceView);
+    const rows = await this.dataSource.query<AttendanceRecord[]>(
+      `SELECT ${attendanceFields} FROM attendances
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY attendance_date DESC`,
+      params,
+    );
+
+    return rows.map(toAttendanceView);
   }
 
   async findForMonitoring(filters: QueryAttendancesDto) {
     const page = filters.page ?? 1;
     const limit = filters.limit ?? defaultPageSize;
-
-    const query = this.attendances
-      .createQueryBuilder('attendance')
-      .orderBy('attendance.attendanceDate', 'DESC')
-      .addOrderBy('attendance.checkInAt', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit);
+    const conditions: string[] = [];
+    const params: (string | number)[] = [];
 
     if (filters.from || filters.to) {
       if (filters.from) {
-        query.andWhere('attendance.attendanceDate >= :from', { from: filters.from });
+        conditions.push('a.attendance_date >= ?');
+        params.push(filters.from);
       }
 
       if (filters.to) {
-        query.andWhere('attendance.attendanceDate <= :to', { to: filters.to });
+        conditions.push('a.attendance_date <= ?');
+        params.push(filters.to);
       }
     } else {
-      query.andWhere('attendance.attendanceDate = :today', { today: toAppDate(new Date()) });
+      conditions.push('a.attendance_date = ?');
+      params.push(toAppDate(new Date()));
     }
 
     if (filters.userId) {
-      query.andWhere('attendance.userId = :userId', { userId: filters.userId });
+      conditions.push('a.user_id = ?');
+      params.push(filters.userId);
     }
 
     if (filters.q) {
-      query
-        .innerJoin('users', 'employee', 'employee.id = attendance.user_id')
-        .andWhere('(employee.name LIKE :keyword OR employee.employee_code LIKE :keyword)', {
-          keyword: `%${filters.q.trim()}%`,
-        });
+      const keyword = `%${filters.q.trim()}%`;
+      conditions.push('(u.name LIKE ? OR u.employee_code LIKE ?)');
+      params.push(keyword, keyword);
     }
 
-    const [attendances, total] = await query.getManyAndCount();
-    const employees = await this.findEmployees(attendances.map((attendance) => attendance.userId));
+    const where = `WHERE ${conditions.join(' AND ')}`;
+    const rows = await this.dataSource.query<MonitoringRow[]>(
+      `SELECT a.id, DATE_FORMAT(a.attendance_date, '%Y-%m-%d') AS attendanceDate,
+              a.check_in_at AS checkInAt,
+              a.work_type AS workType, a.notes, a.photo_path AS photoPath,
+              u.id AS employeeId, u.employee_code AS employeeCode, u.name AS employeeName,
+              u.position AS employeePosition, u.department AS employeeDepartment
+       FROM attendances a
+       INNER JOIN users u ON u.id = a.user_id
+       ${where}
+       ORDER BY a.attendance_date DESC, a.check_in_at DESC
+       LIMIT ? OFFSET ?`,
+      [...params, limit, (page - 1) * limit],
+    );
+
+    const totals = await this.dataSource.query<{ total: number | string }[]>(
+      `SELECT COUNT(*) AS total FROM attendances a INNER JOIN users u ON u.id = a.user_id ${where}`,
+      params,
+    );
+    const total = Number(totals[0]?.total ?? 0);
 
     return {
-      items: attendances.map((attendance) =>
-        toMonitoredView(attendance, employees.get(attendance.userId)),
+      items: rows.map((row) =>
+        toMonitoredView(row, {
+          id: row.employeeId,
+          employeeCode: row.employeeCode,
+          name: row.employeeName,
+          position: row.employeePosition,
+          department: row.employeeDepartment,
+        }),
       ),
       meta: {
         page,
@@ -135,16 +183,5 @@ export class AttendancesService {
         totalPages: Math.ceil(total / limit),
       },
     };
-  }
-
-  private async findEmployees(userIds: string[]) {
-    const uniqueIds = [...new Set(userIds)];
-
-    if (!uniqueIds.length) {
-      return new Map<string, Employee>();
-    }
-
-    const employees = await this.employees.find({ where: { id: In(uniqueIds) } });
-    return new Map(employees.map((employee) => [employee.id, employee]));
   }
 }
