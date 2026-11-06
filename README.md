@@ -11,7 +11,8 @@ Aplikasi absensi WFH dan monitoring karyawan. Backend dan frontend berada di sat
 
 **HRD**
 
-- Monitoring absensi seluruh karyawan: filter rentang tanggal dan pencarian nama, kode, atau email, plus pratinjau foto.
+- Monitoring absensi seluruh karyawan: filter rentang tanggal dan pencarian nama, kode, atau email, pratinjau foto, dengan pagination 10 baris per halaman.
+- Membuka detail karyawan berisi profil lengkap dan 5 absensi terbaru.
 - Mengelola data karyawan: tambah, ubah, hapus, cari, dan filter status aktif.
 - Data absensi bersifat baca saja, tidak ada aksi ubah atau hapus.
 

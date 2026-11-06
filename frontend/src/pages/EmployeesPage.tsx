@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -146,7 +147,12 @@ export const EmployeesPage = () => {
                       <tr key={user.id} className="hover:bg-slate-50">
                         <td className="px-5 py-4 font-medium text-slate-600">{user.employeeCode}</td>
                         <td className="px-5 py-4">
-                          <p className="font-medium text-slate-900">{user.name}</p>
+                          <Link
+                            to={`/karyawan/${user.id}`}
+                            className="font-medium text-slate-900 transition hover:text-indigo-700 hover:underline"
+                          >
+                            {user.name}
+                          </Link>
                           <p className="text-xs text-slate-500">{user.position ?? '-'}</p>
                         </td>
                         <td className="px-5 py-4 text-slate-600">{user.email}</td>

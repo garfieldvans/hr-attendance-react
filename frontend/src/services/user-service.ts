@@ -12,6 +12,11 @@ export const getUsers = async (filters: UserFilters = {}) => {
   return response.data;
 };
 
+export const getUser = async (id: string) => {
+  const response = await http.get<User>(`/users/${id}`);
+  return response.data;
+};
+
 export const createUser = async (payload: EmployeeInput) => {
   const response = await http.post<User>('/users', payload);
   return response.data;

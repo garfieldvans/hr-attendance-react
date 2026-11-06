@@ -11,6 +11,7 @@ import { Employee } from './employee.entity';
 import { relativePhotoPath, removePhoto } from './photo-storage';
 
 const duplicateEntryError = 1062;
+const defaultPageSize = 10;
 
 @Injectable()
 export class AttendancesService {
@@ -86,10 +87,15 @@ export class AttendancesService {
   }
 
   async findForMonitoring(filters: QueryAttendancesDto) {
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? defaultPageSize;
+
     const query = this.attendances
       .createQueryBuilder('attendance')
       .orderBy('attendance.attendanceDate', 'DESC')
-      .addOrderBy('attendance.checkInAt', 'DESC');
+      .addOrderBy('attendance.checkInAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
 
     if (filters.from || filters.to) {
       if (filters.from) {
@@ -115,12 +121,20 @@ export class AttendancesService {
         });
     }
 
-    const attendances = await query.getMany();
+    const [attendances, total] = await query.getManyAndCount();
     const employees = await this.findEmployees(attendances.map((attendance) => attendance.userId));
 
-    return attendances.map((attendance) =>
-      toMonitoredView(attendance, employees.get(attendance.userId)),
-    );
+    return {
+      items: attendances.map((attendance) =>
+        toMonitoredView(attendance, employees.get(attendance.userId)),
+      ),
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   private async findEmployees(userIds: string[]) {

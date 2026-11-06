@@ -38,7 +38,7 @@ Tombol **HRD** dan **Karyawan** di halaman login mengisi kredensial di atas otom
 ```
 src/
   components/   komponen reusable (Button, Input, Badge, Card, AppLayout, PhotoCapture, EmployeeDialog)
-  pages/        halaman (login, beranda, absensi, monitoring, data karyawan)
+  pages/        halaman (login, beranda, absensi, monitoring, data karyawan, detail karyawan)
   services/     pemanggilan API dan penyimpanan sesi
   hooks/        AuthProvider dan useAuth
   lib/          helper format tanggal dan jam
@@ -51,6 +51,8 @@ src/
 - Selama development, Vite mem-proxy `/api` ke `http://localhost:3000` (lihat `vite.config.ts`), jadi browser tidak perlu konfigurasi CORS.
 - Sesi login disimpan di `localStorage` lewat `services/session.ts`. Respons 401 menghapus sesi dan mengarahkan pengguna kembali ke halaman login.
 - Pesan error dari backend ditampilkan apa adanya, termasuk validasi per field.
+- Monitoring memuat 10 absensi per halaman lewat parameter `page` dan `limit`; posisi halaman ikut direset saat filter tanggal atau kata kunci berubah.
+- Halaman detail karyawan (`/karyawan/:id`) mengambil profil dari `GET /api/users/:id` dan 5 absensi terbaru dari `GET /api/attendances?userId=...`. Nama karyawan di tabel monitoring dan data karyawan menjadi tautan ke halaman ini.
 
 ## Kamera
 
