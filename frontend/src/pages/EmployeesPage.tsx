@@ -6,10 +6,19 @@ import { Card } from '../components/Card';
 import { EmployeeDialog } from '../components/EmployeeDialog';
 import { getErrorMessage } from '../services/http';
 import { deleteUser, getUsers } from '../services/user-service';
-import type { User } from '../types';
+import type { PaginationMeta, User } from '../types';
+
+const pageSize = 10;
 
 export const EmployeesPage = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta>({
+    page: 1,
+    limit: pageSize,
+    total: 0,
+    totalPages: 0,
+  });
+  const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -19,12 +28,19 @@ export const EmployeesPage = () => {
   const [editing, setEditing] = useState<User | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const loadUsers = useCallback(async (search: string) => {
+  const loadUsers = useCallback(async (search: string, targetPage: number) => {
     setLoading(true);
     setError('');
 
     try {
-      setUsers(await getUsers({ role: 'EMPLOYEE', ...(search ? { q: search } : {}) }));
+      const result = await getUsers({
+        role: 'EMPLOYEE',
+        page: targetPage,
+        limit: pageSize,
+        ...(search ? { q: search } : {}),
+      });
+      setUsers(result.items);
+      setMeta(result.meta);
     } catch (loadError) {
       setError(getErrorMessage(loadError));
     } finally {
@@ -34,11 +50,11 @@ export const EmployeesPage = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      void loadUsers(keyword.trim());
+      void loadUsers(keyword.trim(), page);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [keyword, loadUsers]);
+  }, [keyword, page, loadUsers]);
 
   const openCreate = () => {
     setEditing(null);
@@ -51,11 +67,19 @@ export const EmployeesPage = () => {
   };
 
   const handleSaved = (message: string) => {
+    const created = editing === null;
+
     setDialogOpen(false);
     setEditing(null);
     setActionError('');
     setNotice(message);
-    void loadUsers(keyword.trim());
+
+    if (created && page !== 1) {
+      setPage(1);
+      return;
+    }
+
+    void loadUsers(keyword.trim(), page);
   };
 
   const handleDelete = async (user: User) => {
@@ -70,7 +94,12 @@ export const EmployeesPage = () => {
     try {
       await deleteUser(user.id);
       setNotice(`${user.name} berhasil dihapus.`);
-      await loadUsers(keyword.trim());
+
+      if (users.length === 1 && page > 1) {
+        setPage(page - 1);
+      } else {
+        await loadUsers(keyword.trim(), page);
+      }
     } catch (deleteError) {
       setActionError(getErrorMessage(deleteError));
     } finally {
@@ -84,7 +113,7 @@ export const EmployeesPage = () => {
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Data karyawan</h1>
           <p className="mt-1 text-sm text-slate-500">
-            {loading ? 'Memuat data...' : `${users.length} karyawan ditemukan`}
+            {loading ? 'Memuat data...' : `${meta.total} karyawan ditemukan`}
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
@@ -93,7 +122,10 @@ export const EmployeesPage = () => {
             aria-label="Cari karyawan"
             placeholder="Cari nama, kode, atau email"
             value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
+            onChange={(event) => {
+              setKeyword(event.target.value);
+              setPage(1);
+            }}
             className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 sm:w-72"
           />
           <Button size="sm" onClick={openCreate}>
@@ -114,7 +146,11 @@ export const EmployeesPage = () => {
         {error ? (
           <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
             <p className="text-sm text-rose-600">{error}</p>
-            <Button variant="secondary" size="sm" onClick={() => void loadUsers(keyword.trim())}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => void loadUsers(keyword.trim(), page)}
+            >
               Coba lagi
             </Button>
           </div>
@@ -192,6 +228,36 @@ export const EmployeesPage = () => {
                 Tidak ada karyawan yang cocok dengan pencarian.
               </div>
             )}
+          </div>
+        )}
+
+        {!loading && !error && meta.total > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3">
+            <p className="text-xs text-slate-500">
+              Menampilkan {(meta.page - 1) * meta.limit + 1}–
+              {(meta.page - 1) * meta.limit + users.length} dari {meta.total} karyawan
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={meta.page <= 1}
+                onClick={() => setPage(meta.page - 1)}
+              >
+                Sebelumnya
+              </Button>
+              <span className="text-xs text-slate-500">
+                Halaman {meta.page} dari {meta.totalPages}
+              </span>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={meta.page >= meta.totalPages}
+                onClick={() => setPage(meta.page + 1)}
+              >
+                Berikutnya
+              </Button>
+            </div>
           </div>
         )}
       </Card>
