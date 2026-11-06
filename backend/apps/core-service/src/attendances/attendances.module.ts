@@ -6,11 +6,10 @@ import { jwtModuleOptions } from '../../../../libs/common/src';
 import { Attendance } from './attendance.entity';
 import { AttendancesController } from './attendances.controller';
 import { AttendancesService } from './attendances.service';
-import { Employee } from './employee.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Attendance, Employee]),
+    TypeOrmModule.forFeature([Attendance]),
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
