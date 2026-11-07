@@ -1,6 +1,6 @@
 # Frontend
 
-Antarmuka aplikasi absensi: login, absen masuk dengan foto, absen pulang, riwayat absensi, dan halaman monitoring untuk HRD.
+Antarmuka aplikasi absensi: login, absen masuk dengan foto, absen pulang, perbaikan absensi, riwayat absensi, dan halaman monitoring untuk HRD.
 
 ## Stack
 
@@ -37,7 +37,8 @@ Tombol **HRD** dan **Karyawan** di halaman login mengisi kredensial di atas otom
 
 ```
 src/
-  components/   komponen reusable (Button, Input, Badge, Card, AppLayout, PhotoCapture, EmployeeDialog)
+  components/   komponen reusable (Button, Input, Badge, Card, AppLayout, PhotoCapture, EmployeeDialog,
+                AttendanceEditDialog, ChangeRequestDialog, ChangeRequestReviewDialog)
   pages/        halaman (login, beranda, absensi, monitoring, data karyawan, detail karyawan)
   services/     pemanggilan API dan penyimpanan sesi
   hooks/        AuthProvider dan useAuth
@@ -55,6 +56,9 @@ src/
 - Data karyawan bisa disaring berdasarkan kata kunci (nama, kode, email) dan status aktif, lalu digabung dengan pagination; jumlah baris di footer mengikuti hasil filter.
 - Halaman detail karyawan (`/karyawan/:id`) mengambil profil dari `GET /api/users/:id` dan 5 absensi terbaru dari `GET /api/attendances?userId=...`. Nama karyawan di tabel monitoring dan data karyawan menjadi tautan ke halaman ini.
 - Tombol "Absen pulang" memanggil `PATCH /api/attendances/me/check-out` dan hanya muncul untuk absensi hari ini yang belum punya jam pulang. Absensi tanpa jam pulang ditampilkan sebagai "Belum absen pulang", termasuk di tabel monitoring HRD.
+- Absensi hari ini bisa diperbaiki lewat dialog "Ubah absensi" yang memanggil `PATCH /api/attendances/:id`; jam masuk, jam pulang, catatan, dan foto bisa diganti tanpa persetujuan HRD.
+- Baris riwayat hari sebelumnya punya aksi "Ajukan koreksi" (`POST /api/attendance-change-requests`) dengan alasan wajib. Statusnya tampil sebagai "Menunggu HRD" atau "Ditolak"; setelah disetujui, tombol ubah muncul dan hanya berlaku untuk satu kali perbaikan.
+- Halaman monitoring HRD menampilkan card "Permintaan koreksi" berisi antrean `PENDING` dan dialog tinjauan untuk menyetujui atau menolak beserta catatan (`PATCH /api/attendance-change-requests/:id/review`).
 
 ## Kamera
 

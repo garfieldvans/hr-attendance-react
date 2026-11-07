@@ -5,6 +5,7 @@ import { Button } from './Button';
 interface PhotoCaptureProps {
   file: File | null;
   onChange: (file: File | null) => void;
+  existingPhotoUrl?: string;
 }
 
 const maxPhotoSize = 5 * 1024 * 1024;
@@ -24,7 +25,7 @@ const cameraErrorMessage = (error: unknown) => {
   return 'Kamera tidak bisa dibuka. Pilih file foto sebagai gantinya.';
 };
 
-export const PhotoCapture = ({ file, onChange }: PhotoCaptureProps) => {
+export const PhotoCapture = ({ file, onChange, existingPhotoUrl }: PhotoCaptureProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
@@ -143,6 +144,12 @@ export const PhotoCapture = ({ file, onChange }: PhotoCaptureProps) => {
       <div className="relative overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50">
         {preview ? (
           <img src={preview} alt="Pratinjau foto absensi" className="h-56 w-full object-cover" />
+        ) : existingPhotoUrl ? (
+          <img
+            src={existingPhotoUrl}
+            alt="Foto absensi saat ini"
+            className="h-56 w-full object-cover"
+          />
         ) : (
           <>
             <video

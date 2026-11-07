@@ -18,6 +18,13 @@ export interface SubmitAttendancePayload {
   notes?: string;
 }
 
+export interface UpdateAttendancePayload {
+  checkInTime: string;
+  checkOutTime: string;
+  notes?: string;
+  photo?: File | null;
+}
+
 export const getMyAttendances = async (filters: PeriodFilters = {}) => {
   const response = await http.get<Attendance[]>('/attendances/me', { params: filters });
   return response.data;
@@ -32,6 +39,26 @@ export const getAttendances = async (filters: MonitoringFilters = {}) => {
 
 export const submitCheckOut = async () => {
   const response = await http.patch<Attendance>('/attendances/me/check-out');
+  return response.data;
+};
+
+export const updateMyAttendance = async (
+  id: string,
+  { checkInTime, checkOutTime, notes, photo }: UpdateAttendancePayload,
+) => {
+  const body = new FormData();
+  body.append('checkInTime', checkInTime);
+  body.append('checkOutTime', checkOutTime);
+
+  if (notes !== undefined) {
+    body.append('notes', notes);
+  }
+
+  if (photo) {
+    body.append('photo', photo);
+  }
+
+  const response = await http.patch<Attendance>(`/attendances/${id}`, body);
   return response.data;
 };
 

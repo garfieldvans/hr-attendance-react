@@ -1,16 +1,30 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FiCheck, FiCheckCircle, FiClock, FiLogOut, FiRefreshCw, FiSend } from 'react-icons/fi';
+import {
+  FiCheck,
+  FiCheckCircle,
+  FiClock,
+  FiEdit2,
+  FiLogOut,
+  FiMessageSquare,
+  FiRefreshCw,
+  FiSend,
+  FiX,
+} from 'react-icons/fi';
+import { AttendanceEditDialog } from '../components/AttendanceEditDialog';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { ChangeRequestDialog } from '../components/ChangeRequestDialog';
 import { PhotoCapture } from '../components/PhotoCapture';
 import { formatFullDate, formatShortDate, formatTime, todayValue } from '../lib/datetime';
 import { getMyAttendances, submitAttendance, submitCheckOut } from '../services/attendance-service';
+import { getMyChangeRequests } from '../services/change-request-service';
 import { getErrorMessage } from '../services/http';
-import type { Attendance } from '../types';
+import type { Attendance, ChangeRequest } from '../types';
 
 export const AttendancePage = () => {
   const [history, setHistory] = useState<Attendance[]>([]);
+  const [requests, setRequests] = useState<ChangeRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [notes, setNotes] = useState('');
@@ -20,13 +34,20 @@ export const AttendancePage = () => {
   const [formError, setFormError] = useState('');
   const [checkOutError, setCheckOutError] = useState('');
   const [notice, setNotice] = useState('');
+  const [editTarget, setEditTarget] = useState<Attendance | null>(null);
+  const [requestTarget, setRequestTarget] = useState<Attendance | null>(null);
 
   const loadHistory = useCallback(async () => {
     setLoading(true);
     setLoadError('');
 
     try {
-      setHistory(await getMyAttendances());
+      const [attendances, changeRequests] = await Promise.all([
+        getMyAttendances(),
+        getMyChangeRequests(),
+      ]);
+      setHistory(attendances);
+      setRequests(changeRequests);
     } catch (error) {
       setLoadError(getErrorMessage(error));
     } finally {
@@ -40,6 +61,16 @@ export const AttendancePage = () => {
 
   const today = todayValue();
   const todayAttendance = history.find((item) => item.attendanceDate === today) ?? null;
+
+  const latestRequestByAttendance = new Map<string, ChangeRequest>();
+
+  requests.forEach((request) => {
+    const current = latestRequestByAttendance.get(request.attendanceId);
+
+    if (!current || request.createdAt > current.createdAt) {
+      latestRequestByAttendance.set(request.attendanceId, request);
+    }
+  });
 
   const handleSubmit = async () => {
     setFormError('');
@@ -140,13 +171,14 @@ export const AttendancePage = () => {
                   <p className="text-sm text-slate-500">{todayAttendance.notes}</p>
                 )}
 
-                {!todayAttendance.checkOutAt && (
-                  <div className="pt-1">
-                    {checkOutError && (
-                      <p className="mb-2 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">
-                        {checkOutError}
-                      </p>
-                    )}
+                {checkOutError && (
+                  <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">
+                    {checkOutError}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {!todayAttendance.checkOutAt && (
                     <Button
                       variant="secondary"
                       size="sm"
@@ -156,8 +188,16 @@ export const AttendancePage = () => {
                       <FiLogOut className="size-4" aria-hidden="true" />
                       Absen pulang
                     </Button>
-                  </div>
-                )}
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditTarget(todayAttendance)}
+                  >
+                    <FiEdit2 className="size-4" aria-hidden="true" />
+                    Ubah absensi
+                  </Button>
+                </div>
               </div>
             </div>
           </Card>
@@ -247,34 +287,105 @@ export const AttendancePage = () => {
             </p>
           ) : (
             <ul className="max-h-[520px] divide-y divide-slate-100 overflow-y-auto">
-              {history.map((item) => (
-                <li key={item.id} className="flex items-center gap-4 px-5 py-3">
-                  <a href={item.photoUrl} target="_blank" rel="noreferrer" className="shrink-0">
-                    <img
-                      src={item.photoUrl}
-                      alt={`Foto absensi ${formatShortDate(item.attendanceDate)}`}
-                      className="size-12 rounded-lg object-cover ring-1 ring-slate-200"
-                    />
-                  </a>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-slate-900">
-                      {formatShortDate(item.attendanceDate)}
-                    </p>
-                    <p className="truncate text-xs text-slate-500">
-                      Masuk {formatTime(item.checkInAt)}
-                      {item.checkOutAt
-                        ? ` · Pulang ${formatTime(item.checkOutAt)}`
-                        : ' · Belum absen pulang'}
-                      {item.notes ? ` · ${item.notes}` : ''}
-                    </p>
-                  </div>
-                  <Badge tone="brand">{item.workType}</Badge>
-                </li>
-              ))}
+              {history.map((item) => {
+                const request = latestRequestByAttendance.get(item.id) ?? null;
+                const canEdit = request?.status === 'APPROVED' && !request.appliedAt;
+                const canRequest =
+                  !request || request.status === 'REJECTED' || Boolean(request.appliedAt);
+                const dateLabel = formatShortDate(item.attendanceDate);
+
+                return (
+                  <li key={item.id} className="flex items-center gap-4 px-5 py-3">
+                    <a href={item.photoUrl} target="_blank" rel="noreferrer" className="shrink-0">
+                      <img
+                        src={item.photoUrl}
+                        alt={`Foto absensi ${dateLabel}`}
+                        className="size-12 rounded-lg object-cover ring-1 ring-slate-200"
+                      />
+                    </a>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-slate-900">{dateLabel}</p>
+                      <p className="truncate text-xs text-slate-500">
+                        Masuk {formatTime(item.checkInAt)}
+                        {item.checkOutAt
+                          ? ` · Pulang ${formatTime(item.checkOutAt)}`
+                          : ' · Belum absen pulang'}
+                        {item.notes ? ` · ${item.notes}` : ''}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      <Badge tone="brand">{item.workType}</Badge>
+
+                      {item.attendanceDate !== today && (
+                        <>
+                          {request?.status === 'PENDING' && (
+                            <Badge tone="neutral" icon={FiClock}>
+                              Menunggu HRD
+                            </Badge>
+                          )}
+                          {request?.status === 'REJECTED' && (
+                            <Badge tone="danger" icon={FiX}>
+                              Ditolak
+                            </Badge>
+                          )}
+                          {canEdit && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              iconOnly
+                              onClick={() => setEditTarget(item)}
+                              aria-label={`Ubah absensi ${dateLabel}`}
+                              title="Ubah absensi"
+                            >
+                              <FiEdit2 className="size-4" aria-hidden="true" />
+                            </Button>
+                          )}
+                          {canRequest && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              iconOnly
+                              onClick={() => setRequestTarget(item)}
+                              aria-label={`Ajukan koreksi absensi ${dateLabel}`}
+                              title="Ajukan koreksi"
+                            >
+                              <FiMessageSquare className="size-4" aria-hidden="true" />
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </Card>
       </div>
+
+      {editTarget && (
+        <AttendanceEditDialog
+          attendance={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSaved={(message) => {
+            setEditTarget(null);
+            setNotice(message);
+            void loadHistory();
+          }}
+        />
+      )}
+
+      {requestTarget && (
+        <ChangeRequestDialog
+          attendance={requestTarget}
+          onClose={() => setRequestTarget(null)}
+          onCreated={(message) => {
+            setRequestTarget(null);
+            setNotice(message);
+            void loadHistory();
+          }}
+        />
+      )}
     </div>
   );
 };

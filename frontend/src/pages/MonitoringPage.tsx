@@ -4,10 +4,12 @@ import { Link } from 'react-router-dom';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { ChangeRequestReviewDialog } from '../components/ChangeRequestReviewDialog';
 import { formatFullDate, formatShortDate, formatTime, todayValue } from '../lib/datetime';
 import { getAttendances } from '../services/attendance-service';
+import { getChangeRequests } from '../services/change-request-service';
 import { getErrorMessage } from '../services/http';
-import type { MonitoredAttendance, PaginationMeta } from '../types';
+import type { ChangeRequest, MonitoredAttendance, PaginationMeta } from '../types';
 
 const pageSize = 10;
 
@@ -29,8 +31,33 @@ export const MonitoringPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [active, setActive] = useState<MonitoredAttendance | null>(null);
+  const [pendingRequests, setPendingRequests] = useState<ChangeRequest[]>([]);
+  const [pendingTotal, setPendingTotal] = useState(0);
+  const [pendingLoading, setPendingLoading] = useState(true);
+  const [pendingError, setPendingError] = useState('');
+  const [reviewTarget, setReviewTarget] = useState<ChangeRequest | null>(null);
+  const [reviewNotice, setReviewNotice] = useState('');
 
   const rangeInvalid = Boolean(from && to && from > to);
+
+  const loadPendingRequests = useCallback(async () => {
+    setPendingLoading(true);
+    setPendingError('');
+
+    try {
+      const result = await getChangeRequests({ status: 'PENDING', page: 1, limit: 5 });
+      setPendingRequests(result.items);
+      setPendingTotal(result.meta.total);
+    } catch (loadError) {
+      setPendingError(getErrorMessage(loadError));
+    } finally {
+      setPendingLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadPendingRequests();
+  }, [loadPendingRequests]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -91,6 +118,89 @@ export const MonitoringPage = () => {
           Pantau kehadiran karyawan beserta foto bukti kerja. Data bersifat baca saja.
         </p>
       </div>
+
+      <Card
+        title="Permintaan koreksi"
+        description={
+          pendingLoading
+            ? 'Memuat permintaan...'
+            : pendingTotal
+              ? `${pendingTotal} permintaan menunggu persetujuan`
+              : 'Tidak ada permintaan yang menunggu'
+        }
+        action={
+          <Button
+            variant="secondary"
+            size="sm"
+            iconOnly
+            onClick={() => void loadPendingRequests()}
+            aria-label="Muat ulang permintaan"
+            title="Muat ulang"
+          >
+            <FiRefreshCw className="size-4" aria-hidden="true" />
+          </Button>
+        }
+      >
+        {reviewNotice && (
+          <p className="mb-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            {reviewNotice}
+          </p>
+        )}
+
+        {pendingError ? (
+          <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">{pendingError}</p>
+        ) : pendingLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <div key={index} className="h-14 animate-pulse rounded-lg bg-slate-100" />
+            ))}
+          </div>
+        ) : pendingRequests.length === 0 ? (
+          <p className="text-sm text-slate-500">Tidak ada permintaan koreksi saat ini.</p>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {pendingRequests.map((request) => (
+              <li
+                key={request.id}
+                className="flex flex-wrap items-start justify-between gap-3 py-3 first:pt-0 last:pb-0"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-900">
+                    {request.employee?.name ?? 'Karyawan'}{' '}
+                    <span className="text-xs font-normal text-slate-400">
+                      {request.employee?.employeeCode ?? ''}
+                    </span>
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {formatShortDate(request.attendance.attendanceDate)} · masuk{' '}
+                    {formatTime(request.attendance.checkInAt)}
+                    {request.attendance.checkOutAt
+                      ? ` · pulang ${formatTime(request.attendance.checkOutAt)}`
+                      : ' · belum absen pulang'}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">{request.reason}</p>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setReviewNotice('');
+                    setReviewTarget(request);
+                  }}
+                >
+                  Tinjau
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {!pendingLoading && pendingTotal > pendingRequests.length && (
+          <p className="mt-3 text-xs text-slate-400">
+            Menampilkan {pendingRequests.length} dari {pendingTotal} permintaan.
+          </p>
+        )}
+      </Card>
 
       <Card>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -344,6 +454,18 @@ export const MonitoringPage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {reviewTarget && (
+        <ChangeRequestReviewDialog
+          request={reviewTarget}
+          onClose={() => setReviewTarget(null)}
+          onReviewed={(message) => {
+            setReviewTarget(null);
+            setReviewNotice(message);
+            void loadPendingRequests();
+          }}
+        />
       )}
     </div>
   );

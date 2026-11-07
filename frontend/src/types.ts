@@ -48,6 +48,33 @@ export interface MonitoredAttendance extends Attendance {
   } | null;
 }
 
+export type ChangeRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface ChangeRequest {
+  id: string;
+  attendanceId: string;
+  reason: string;
+  status: ChangeRequestStatus;
+  reviewNote: string | null;
+  reviewedAt: string | null;
+  appliedAt: string | null;
+  createdAt: string;
+  attendance: {
+    id: string;
+    attendanceDate: string;
+    checkInAt: string;
+    checkOutAt: string | null;
+    notes: string | null;
+  };
+  employee: {
+    id: string;
+    employeeCode: string;
+    name: string;
+    position: string | null;
+    department: string | null;
+  } | null;
+}
+
 export interface PaginationMeta {
   page: number;
   limit: number;

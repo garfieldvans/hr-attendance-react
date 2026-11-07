@@ -27,3 +27,11 @@ export const formatFullDate = (value: string) => fullDateFormat.format(parseDate
 export const formatShortDate = (value: string) => shortDateFormat.format(parseDate(value));
 
 export const formatTime = (value: string) => timeFormat.format(new Date(value));
+
+export const toTimeInputValue = (value: string) => {
+  const date = new Date(value);
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+
+  return `${hour}:${minute}`;
+};
