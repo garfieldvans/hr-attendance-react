@@ -1,8 +1,15 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, QueryFailedError, Repository } from 'typeorm';
-import { JwtPayload, WorkType } from '../../../../libs/common/src';
-import { toAppDate } from './app-date';
+import { ChangeRequestStatus, JwtPayload, WorkType } from '../../../../libs/common/src';
+import { toAppDate, toAppDateTime, toAppTime } from './app-date';
+import { AttendanceChangeRequest } from './attendance-change-request.entity';
 import { Attendance } from './attendance.entity';
 import {
   AttendanceRecord,
@@ -11,10 +18,12 @@ import {
 } from './attendance.mapper';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { QueryAttendancesDto, QueryPeriodDto } from './dto/query-attendances.dto';
+import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import { relativePhotoPath, removePhoto } from './photo-storage';
 
 const duplicateEntryError = 1062;
 const defaultPageSize = 10;
+const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 interface MonitoringRow extends AttendanceRecord {
   employeeId: string;
@@ -39,6 +48,8 @@ export class AttendancesService {
   constructor(
     @InjectRepository(Attendance)
     private readonly attendances: Repository<Attendance>,
+    @InjectRepository(AttendanceChangeRequest)
+    private readonly changeRequests: Repository<AttendanceChangeRequest>,
     @InjectDataSource()
     private readonly dataSource: DataSource,
   ) {}
@@ -114,6 +125,111 @@ export class AttendancesService {
     );
 
     return toAttendanceView(rows[0]);
+  }
+
+  async update(
+    user: JwtPayload,
+    id: string,
+    photo: Express.Multer.File | undefined,
+    dto: UpdateAttendanceDto,
+  ) {
+    if (!/^\d+$/.test(id)) {
+      throw new NotFoundException('Absensi tidak ditemukan');
+    }
+
+    const rows = await this.dataSource.query<AttendanceRecord[]>(
+      `SELECT ${attendanceFields} FROM attendances WHERE id = ? AND user_id = ? LIMIT 1`,
+      [id, user.sub],
+    );
+    const attendance = rows[0];
+
+    if (!attendance) {
+      throw new NotFoundException('Absensi tidak ditemukan');
+    }
+
+    const now = new Date();
+    const photoPath = photo ? relativePhotoPath(photo.path) : null;
+    let approvedRequestId: string | null = null;
+
+    try {
+      if (attendance.attendanceDate !== toAppDate(now)) {
+        const approved = await this.dataSource.query<{ id: string }[]>(
+          `SELECT id FROM attendance_change_requests
+           WHERE attendance_id = ? AND status = ? AND applied_at IS NULL
+           ORDER BY id DESC LIMIT 1`,
+          [attendance.id, ChangeRequestStatus.APPROVED],
+        );
+
+        if (!approved.length) {
+          throw new ForbiddenException(
+            'Koreksi absensi hari sebelumnya perlu persetujuan HRD',
+          );
+        }
+
+        approvedRequestId = approved[0].id;
+      }
+
+      const checkInTime = dto.checkInTime?.trim() || toAppTime(attendance.checkInAt);
+      const checkOutTime =
+        dto.checkOutTime !== undefined
+          ? dto.checkOutTime.trim()
+          : attendance.checkOutAt
+            ? toAppTime(attendance.checkOutAt)
+            : '';
+
+      if (!timePattern.test(checkInTime)) {
+        throw new BadRequestException('Format jam masuk harus HH:mm');
+      }
+
+      if (checkOutTime && !timePattern.test(checkOutTime)) {
+        throw new BadRequestException('Format jam pulang harus HH:mm');
+      }
+
+      const checkInAt = toAppDateTime(attendance.attendanceDate, checkInTime);
+      const checkOutAt = checkOutTime
+        ? toAppDateTime(attendance.attendanceDate, checkOutTime)
+        : null;
+
+      if (checkInAt > now) {
+        throw new BadRequestException('Jam masuk tidak boleh melebihi waktu sekarang');
+      }
+
+      if (checkOutAt && checkOutAt > now) {
+        throw new BadRequestException('Jam pulang tidak boleh melebihi waktu sekarang');
+      }
+
+      if (checkOutAt && checkOutAt <= checkInAt) {
+        throw new BadRequestException('Jam pulang harus setelah jam masuk');
+      }
+
+      await this.attendances.update(attendance.id, {
+        checkInAt,
+        checkOutAt,
+        notes: dto.notes === undefined ? attendance.notes : dto.notes.trim() || null,
+        ...(photoPath ? { photoPath } : {}),
+      });
+    } catch (error) {
+      if (photoPath) {
+        await removePhoto(photoPath);
+      }
+
+      throw error;
+    }
+
+    if (photoPath) {
+      await removePhoto(attendance.photoPath);
+    }
+
+    if (approvedRequestId) {
+      await this.changeRequests.update(approvedRequestId, { appliedAt: now });
+    }
+
+    const updatedRows = await this.dataSource.query<AttendanceRecord[]>(
+      `SELECT ${attendanceFields} FROM attendances WHERE id = ? LIMIT 1`,
+      [attendance.id],
+    );
+
+    return toAttendanceView(updatedRows[0]);
   }
 
   async findMine(userId: string, period: QueryPeriodDto) {

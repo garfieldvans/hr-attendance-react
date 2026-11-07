@@ -15,7 +15,7 @@ const serviceRoutes: ServiceRoute[] = [
     defaultUrl: 'http://localhost:3001',
   },
   {
-    prefixes: ['/api/attendances', '/api/files'],
+    prefixes: ['/api/attendances', '/api/attendance-change-requests', '/api/files'],
     envKey: 'CORE_SERVICE_URL',
     defaultUrl: 'http://localhost:3002',
   },

@@ -55,7 +55,7 @@ npm run start:gateway
 | `npm run build` | kompilasi semua app ke `dist/` |
 | `npm run typecheck` | cek tipe tanpa menghasilkan file |
 | `npm run migrate:auth` | migrasi tabel `users` |
-| `npm run migrate:core` | migrasi tabel `attendances` |
+| `npm run migrate:core` | migrasi tabel `attendances` dan `attendance_change_requests` |
 | `npm run seed` | isi 4 akun awal |
 
 ## Endpoint
@@ -73,6 +73,11 @@ Semua request dari frontend masuk lewat gateway.
 | DELETE | `/api/users/:id` | HRD | hapus karyawan, ditolak bila sudah punya data absensi |
 | POST | `/api/attendances` | karyawan | kirim absensi, `multipart/form-data` dengan `photo` (JPG/PNG/WebP, maks 5 MB) dan `notes` opsional; `workType` selalu `WFH` |
 | PATCH | `/api/attendances/me/check-out` | karyawan | absen pulang hari ini; ditolak bila belum absen masuk atau sudah absen pulang |
+| PATCH | `/api/attendances/:id` | karyawan | ubah jam masuk, jam pulang, catatan, dan foto absensi sendiri; hari ini bebas, hari sebelumnya butuh persetujuan koreksi |
+| POST | `/api/attendance-change-requests` | karyawan | ajukan koreksi absensi hari sebelumnya, body `attendanceId` dan `reason` (5–255 karakter) |
+| GET | `/api/attendance-change-requests/me` | karyawan | daftar permintaan koreksi sendiri beserta status dan detail absensinya |
+| GET | `/api/attendance-change-requests` | HRD | daftar permintaan koreksi, filter `status` (default `PENDING`), dengan pagination |
+| PATCH | `/api/attendance-change-requests/:id/review` | HRD | setujui atau tolak permintaan, body `status` (`APPROVED`/`REJECTED`) dan `reviewNote` opsional |
 | GET | `/api/attendances/me` | bearer token | riwayat absensi sendiri, bisa difilter `from` dan `to` (`YYYY-MM-DD`) |
 | GET | `/api/attendances` | HRD | monitoring absensi hari ini, difilter `from`, `to`, `q`, `userId`, dengan pagination `page` dan `limit` |
 | GET | `/api/files/...` | publik | file foto absensi |
@@ -89,6 +94,8 @@ Semua request dari frontend masuk lewat gateway.
 - Akun HRD tetap tersimpan di tabel `users`, tetapi tidak ikut ditampilkan pada pengelolaan data karyawan di frontend (`GET /api/users` dengan filter `role`).
 - Absensi menyimpan tanggal dan jam dari server. Tanggal kehadiran dihitung dengan zona `APP_TIMEZONE` (default `Asia/Jakarta`), jadi absen jam 00.30 WIB tercatat pada hari yang benar.
 - Absen pulang hanya mengisi `check_out_at` pada baris absensi hari itu, sehingga tetap satu baris per hari. Kolom ini nullable: bila karyawan tidak absen pulang, nilainya `null` dan ditampilkan sebagai "Belum absen pulang".
+- Absensi hari ini bisa diperbaiki karyawan lewat `PATCH /api/attendances/:id` tanpa approval: jam masuk, jam pulang, catatan, dan foto. Jam dihitung ulang dari tanggal absensi dan `APP_TIMEZONE`, divalidasi tidak melebihi waktu sekarang serta jam pulang harus setelah jam masuk. Kolom `updated_at` mencatat kapan terakhir diubah.
+- Koreksi hari sebelumnya memakai tabel `attendance_change_requests` (`PENDING`, `APPROVED`, `REJECTED`) dengan alasan, catatan review, dan siapa yang mereview. Satu absensi hanya boleh punya satu permintaan `PENDING`; permintaan yang disetujui bisa dipakai sekali (`applied_at`) lalu karyawan harus mengajukan lagi bila masih perlu diubah.
 - Foto disimpan di `UPLOAD_DIR` (default `uploads/attendances/<tanggal>/`) dan disajikan `core-service` lewat `/files`, lalu diteruskan gateway sebagai `/api/files/...`. Nama file memakai UUID supaya tidak bisa ditebak.
 - Endpoint daftar karyawan dan monitoring mengembalikan `{ items, meta }` dengan `page` (default 1) dan `limit` (default 10, maksimal 50), jadi `total` dan `totalPages` sudah dihitung server. Filter `q` pada monitoring menyaring berdasarkan nama atau kode karyawan.
 - Operasi baca (login, profil, daftar karyawan, absensi, monitoring) memakai query SQL langsung lewat `DataSource.query`; penulisan data tetap lewat repository TypeORM agar validasi dan relasi aman.

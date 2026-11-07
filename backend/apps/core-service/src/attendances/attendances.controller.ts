@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Patch,
   Post,
   Query,
@@ -21,6 +22,7 @@ import {
 import { AttendancesService } from './attendances.service';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { QueryAttendancesDto, QueryPeriodDto } from './dto/query-attendances.dto';
+import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import { attendancePhotoUpload } from './photo-storage';
 
 @Controller('attendances')
@@ -43,6 +45,18 @@ export class AttendancesController {
   @Roles(Role.EMPLOYEE)
   checkOut(@CurrentUser() user: JwtPayload) {
     return this.attendancesService.checkOut(user.sub);
+  }
+
+  @Patch(':id')
+  @Roles(Role.EMPLOYEE)
+  @UseInterceptors(FileInterceptor('photo', attendancePhotoUpload))
+  update(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() dto: UpdateAttendanceDto,
+    @UploadedFile() photo?: Express.Multer.File,
+  ) {
+    return this.attendancesService.update(user, id, photo, dto);
   }
 
   @Get('me')

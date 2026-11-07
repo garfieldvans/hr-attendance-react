@@ -1,3 +1,4 @@
+export * from './change-request-status.enum';
 export * from './role.enum';
 export * from './work-type.enum';
 export * from './auth/authenticated-request';

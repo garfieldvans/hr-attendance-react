@@ -8,12 +8,15 @@ Aplikasi absensi WFH dan monitoring karyawan. Backend dan frontend berada di sat
 
 - Login, lalu absen masuk WFH sekali sehari dengan foto bukti kerja dan catatan opsional, serta absen pulang saat selesai bekerja.
 - Melihat riwayat absensi sendiri beserta status masuk dan pulang hari ini.
+- Memperbaiki absensi hari ini (jam masuk, jam pulang, catatan, foto) tanpa persetujuan HRD.
+- Mengajukan koreksi untuk absensi hari sebelumnya beserta alasannya; setelah disetujui HRD, absensi tersebut bisa diperbaiki satu kali.
 
 **HRD**
 
 - Monitoring absensi seluruh karyawan: filter rentang tanggal dan pencarian nama, kode, atau email, pratinjau foto, dengan pagination 10 baris per halaman.
 - Membuka detail karyawan berisi profil lengkap dan 5 absensi terbaru.
 - Mengelola data karyawan: tambah, ubah, hapus, cari, filter status aktif, dengan pagination 10 baris per halaman.
+- Meninjau permintaan koreksi absensi dari karyawan: setujui atau tolak dengan catatan.
 - Data absensi bersifat baca saja, tidak ada aksi ubah atau hapus.
 
 ## Aturan absensi
@@ -21,6 +24,8 @@ Aplikasi absensi WFH dan monitoring karyawan. Backend dan frontend berada di sat
 - Hanya role karyawan yang bisa mengirim absensi; HRD mendapat 403 dan menu Absensi tidak muncul untuk HRD.
 - Satu absensi per hari: satu absen masuk, lalu satu absen pulang pada baris yang sama. Tanggal dan jam diambil dari server memakai zona `APP_TIMEZONE` (default `Asia/Jakarta`).
 - Absen pulang tidak wajib. Kalau karyawan lupa, jam pulang dibiarkan kosong dan statusnya tampil sebagai "Belum absen pulang" di halaman absensi maupun monitoring HRD.
+- Absensi hari ini bisa diubah langsung oleh karyawan, termasuk jam masuk dan jam pulang. Absensi hari sebelumnya hanya bisa diubah setelah permintaan koreksi disetujui HRD, dan persetujuan itu berlaku sekali pakai.
+- Satu absensi hanya boleh punya satu permintaan koreksi aktif. Permintaan yang ditolak bisa diajukan lagi dengan alasan baru.
 - Tipe kerja selalu WFH.
 - Foto wajib diunggah (JPG/PNG/WebP, maksimal 5 MB), bisa lewat kamera atau pilih file.
 - Tidak ada registrasi mandiri. Akun karyawan dibuat HRD, dan akun HRD tidak ikut tampil di daftar karyawan.
